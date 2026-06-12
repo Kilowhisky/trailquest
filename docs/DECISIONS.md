@@ -432,8 +432,50 @@ the headline "perfect run = 1000" and the "Quest Complete" badge unreachable. A 
   testing plan) gains a live trigger. The point model and `max = 1000` are unchanged.
 - [scoring-design.md](specs/scoring-design.md) and [testing-plan.md](specs/testing-plan.md) are updated for
   the Pathfinder badge, the Access Aware wording, and the restricted-reachability resolution.
-- This is the last planning decision before the executable implementation plan; no app code is written in
-  the consolidation pass itself.
+- No app code is written in the consolidation pass itself; the executable implementation plan follows
+  (the CI/CD delivery process is recorded separately in D-014).
+
+---
+
+## D-014: Record the CI/CD delivery process (autonomous PR train + GitHub Pages live demo)
+
+**Date:** 2026-06-12
+
+### Decision
+
+Give the separately-authored [CI/CD pipeline spec](specs/2026-06-12-cicd-pipeline-design.md) a decision home.
+TrailQuest is **built through a visible, mostly-autonomous delivery pipeline**, because the take-home is
+judged on "a clear AI-assisted engineering process":
+
+- **One PR per build step** (~7), each in its own git worktree/branch cut from an updated `main`.
+- **GitHub Actions CI** (`tsc --noEmit` · `eslint` · `vitest run` · `vite build`) is the **required merge
+  gate**; **GitHub Copilot** review is requested + waited-on but **advisory, not a blocking approval**.
+- **Squash-merge to `main`** with no required human approval (a self-authored autonomous loop can't satisfy
+  one); branch protection requires only the CI check.
+- **Every merge auto-deploys a live demo to GitHub Pages** (`https://kilowhisky.github.io/trailquest/`).
+  This **reverses the earlier "deployment out of scope" stance** — a clickable running map is the highest
+  reviewer-value-per-minute for a keyless frontend.
+- Reviewer-facing hygiene: repo made **public**, description + topics, secret scanning + push protection.
+
+### Context
+
+A concurrent brainstorm produced the CI/CD spec (commits `2cf7d24`, `da50578`) and folded a repo-analysis
+pass into it, but it had no decision entry, plan reference, or changelog line. The consolidation pass (D-013)
+flagged this gap; this decision closes it.
+
+### Rationale
+
+- The PR / CI / review / merge trail plus a live demo *is* part of the deliverable, not overhead.
+- Recording it here keeps the decision log the single source of truth — every other spec has a D-0xx home.
+
+### Consequences
+
+- **Outward-facing setup is gated on explicit user go-ahead** (NOT done in the consolidation pass): making
+  the repo public, pushing `main`, enabling branch protection / Copilot review / Pages, and running the
+  autonomous build loop. `gh` is already authenticated as `Kilowhisky` (ADMIN).
+- The scaffold PR (build step 1) introduces `.github/workflows/ci.yml` + `deploy.yml`, ESLint config,
+  `.gitignore`, and Vite `base: '/trailquest/'` (load-bearing for Pages); a `docs/CICD.md` runbook is added then.
+- **Open:** whether to add a `LICENSE` (MIT, ~1 min) — see the CI/CD spec's open questions.
 
 ---
 
@@ -458,5 +500,8 @@ Resolved during consolidation (D-013). Kept here as a record of how each was ans
 
 ## Current next decision
 
-Consolidation is complete (D-013). The next step is to turn the authoritative implementation plan into an
-executable task breakdown (via the writing-plans skill), then scaffold the app.
+Consolidation is complete (D-013 + D-014); the implementation is fully specced and internally consistent.
+The next actions are **outward-facing and need explicit user go-ahead**: make the repo public, push `main`,
+stand up CI / Pages / Copilot per [the CI/CD spec](specs/2026-06-12-cicd-pipeline-design.md) (D-014), and run
+the 7-step autonomous build train (or scaffold manually). Optionally, produce a granular task breakdown via
+the writing-plans skill first.

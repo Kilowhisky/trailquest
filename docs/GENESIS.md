@@ -163,6 +163,10 @@ The handoff should tell Claude:
 
 ## Implementation north star
 
+> **Superseded note (D-011 / D-013):** the original north star below said "static mock access polygons /
+> no real land data." That was later reversed — the prototype now uses **real** Moab geometry
+> (OSM / BLM / UGRC / USGS) and mocks only the game layer. The block is preserved as part of the origin story.
+
 The first implementation should be a small, reliable demo:
 
 ```text

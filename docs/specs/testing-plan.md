@@ -1,8 +1,8 @@
 # TrailQuest Testing — Plan & Spec
 
 **Date:** 2026-06-12
-**Status:** Approved (pre-implementation), refined from the implementation plan's testing line
-**Related:** [IMPLEMENTATION-PLAN.md](../plans/IMPLEMENTATION-PLAN.md) · [scoring-design.md](scoring-design.md) · [DECISIONS.md](../DECISIONS.md) (D-010, D-011)
+**Status:** Consolidated 2026-06-12 (D-013); pre-implementation
+**Related:** [IMPLEMENTATION-PLAN.md](../plans/IMPLEMENTATION-PLAN.md) · [scoring-design.md](scoring-design.md) · [DECISIONS.md](../DECISIONS.md) (D-010, D-011, **D-013**)
 
 ## Purpose
 
@@ -56,7 +56,7 @@ DOM; the smoke test mocks `react-leaflet`.
 | `evaluateCleanRun` clean | `+100` and `Clean Run` badge |
 | `evaluateCleanRun` after a caution check-in | `0`, no badge |
 | `awardBadges` | Derived badge set matches state |
-| `Quest Complete` badge | Fires only when all 5 known checkpoints are checked in |
+| `Quest Complete` badge | Fires only when all 5 scored checkpoints are checked in (all reachable; the forbidden waypoint never counts — D-013) |
 | `computeTotals` max invariant | **`max === 1000` always**, independent of current state |
 | `computeTotals` breakdown | Breakdown string is correct, e.g. `Checkpoints 3/5 · Photos 2 · Cache ✗ · Clean ✓` |
 
@@ -66,7 +66,7 @@ DOM; the smoke test mocks `react-leaflet`.
 |---|---|
 | `MOVE_USER` | Position updates; current access zone recomputed |
 | `CHECK_IN` inside a public geofence | Delegates to scoring; state advances; badge set updates |
-| `CHECK_IN` inside a **restricted** zone | Blocked: no points, no status change, but `Access Aware` granted (D-011 #5) |
+| `CHECK_IN` at the **forbidden** waypoint (restricted zone) | Blocked: no points, no status change, not counted toward Quest Complete, but `Access Aware` granted (D-011 #5, D-013) |
 | `CHECK_IN` while outside any geofence | Rejected — no-op |
 | Caution check-in → completion | `cautionCheckedIn` survives to `evaluateCleanRun` (sequencing guard) |
 | Geocache: enter search circle, then exact geofence | No reveal inside the fuzzy circle; `+250` fires only inside the exact geofence |

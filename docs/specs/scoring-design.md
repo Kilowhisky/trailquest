@@ -1,8 +1,8 @@
 # TrailQuest Scoring — Design Spec
 
 **Date:** 2026-06-12
-**Status:** Approved (brainstorm), pending implementation plan
-**Related:** [IMPLEMENTATION-PLAN.md](../plans/IMPLEMENTATION-PLAN.md) · [DECISIONS.md](../DECISIONS.md) (D-004, D-005, D-010)
+**Status:** Consolidated 2026-06-12 (D-013); pending implementation
+**Related:** [IMPLEMENTATION-PLAN.md](../plans/IMPLEMENTATION-PLAN.md) · [DECISIONS.md](../DECISIONS.md) (D-004, D-005, D-010, **D-013**) · [fog-of-war spec](2026-06-12-fog-of-war-discovery-design.md)
 
 ## Purpose
 
@@ -30,7 +30,7 @@ Perfect run = **1000 points**.
 
 | Source | Value | Subtotal | Notes |
 |---|---|---|---|
-| Checkpoint check-in | 100 each | 500 | 5 known checkpoints (visible markers) |
+| Checkpoint check-in | 100 each | 500 | 5 scored checkpoints (discovered via fog-of-war; all in public/caution so all reachable — D-013) |
 | Photo bonus | 50 each | 150 | 3 scenic checkpoints with a photo prompt; "I got the shot" self-attest |
 | Hidden geocache (sidequest) | 250 | 250 | One-time discovery bonus |
 | Clean Run bonus | 100 | 100 | Awarded at completion if no check-in ever occurred inside a caution zone |
@@ -47,6 +47,12 @@ Enabled only when the user is inside a checkpoint geofence:
 - **Caution zone** → check-in **allowed but flagged**; counts for points but
   **forfeits the Clean Run bonus**.
 - **Public** → normal check-in.
+
+**Restricted reachability (D-013).** None of the **5 scored** checkpoints sit in a restricted zone, so a
+perfect run = 1000 and the Quest Complete badge are achievable. The restricted-block path is demonstrated
+live by a **6th, unscored "forbidden" waypoint** just inside the restricted (NPS / Arches) line: its
+check-in is always blocked, it grants the **Access Aware** badge, awards **no points**, and does **not**
+count toward Quest Complete.
 
 ### Hidden geocache (sidequest)
 
@@ -76,12 +82,13 @@ Enabled only when the user is inside a checkpoint geofence:
 | Badge | Trigger |
 |---|---|
 | Trailhead | First successful check-in |
-| Access Aware | First time an access warning is heeded (blocked or flagged check-in) |
+| Access Aware | First time the app surfaces an access warning the user acknowledges — a blocked **restricted** check-in attempt **or** a **caution**-zone check-in (D-013) |
 | Shutterbug | First photo bonus |
 | Cache Hunter | Found the hidden geocache |
 | Clean Run | Completed quest with no caution-zone check-ins |
+| Pathfinder | All 5 scored checkpoints discovered (fog-of-war); no points |
 | Left Your Mark | Posted to the posterboard |
-| Quest Complete | All 5 known checkpoints checked in |
+| Quest Complete | All 5 scored checkpoints checked in (all reachable — D-013) |
 
 ## Display — ScoreCard overlay
 

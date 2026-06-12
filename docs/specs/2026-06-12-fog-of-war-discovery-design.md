@@ -92,9 +92,11 @@ The fog only holds if **every surface** hides undiscovered checkpoints consisten
 
 ## Scoring / badges
 
-- Add one badge: **"Pathfinder"** — awarded when **all** checkpoints are discovered.
-- Existing badge set is preserved: Trailhead, Access Aware, Shutterbug, Quest Complete →
-  **+ Pathfinder**.
+- Add one badge: **"Pathfinder"** — awarded when **all 5 scored checkpoints** are discovered. (The 6th
+  unscored "forbidden" waypoint from D-013 is shown from the start as a "restricted — do not enter" marker,
+  not a discovery target, so it does not gate Pathfinder.)
+- Canonical badge set after this addition = 8 (D-013): Trailhead, Access Aware, Shutterbug, Cache Hunter,
+  Clean Run, **Pathfinder**, Left Your Mark, Quest Complete.
 - Discovery grants **no points** — points stay tied to actual check-ins, keeping scoring honest.
 
 ## Testing

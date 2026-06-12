@@ -24,6 +24,16 @@ Claude Code with Chris input: Add simulated check-in scoring
 
 This keeps the AI-assisted process transparent while making clear that the agent is operating under human direction.
 
+## Relationship to the tooling footer
+
+This human-readable prefix is the **preferred** convention, not a hard gate — some commits in the history
+are plain imperative summaries, and that is fine. It also coexists with any machine-readable trailer the
+coding harness appends (e.g. a `Co-Authored-By:` line); the two are complementary — the prefix states the
+human direction, the trailer records the tool. Neither replaces the other.
+
+> Not to be confused with `docs/DATA-SOURCES.md` (created at implementation), which attributes the **data**
+> sources (OSM / BLM / UGRC / USGS / Esri). This file is only about **commit-message / repo-note** authorship.
+
 ## Scope
 
 Use this convention for:

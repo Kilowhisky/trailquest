@@ -14,6 +14,23 @@ Read these files before implementation work:
 6. `CHAT-LOG.md` — chronological summaries of AI-agent sessions.
 7. `ATTRIBUTION.md` — convention for AI-authored commit messages and repo notes.
 
+## Plan, specs & research
+
+The authoritative build plan and the feature specs it references:
+
+- `plans/IMPLEMENTATION-PLAN.md` — authoritative full-corpus implementation plan (start here for the build).
+- `specs/scoring-design.md` — point model, badges, geocache, posterboard (D-010).
+- `specs/testing-plan.md` — test inventory + pinned spatial/scoring semantics (D-011, D-013).
+- `specs/2026-06-12-fog-of-war-discovery-design.md` — discovery mechanic + Pathfinder badge.
+- `specs/2026-06-12-real-attribute-surfacing-design.md` — verbatim source attributes (D-012 tier 1).
+- `specs/2026-06-12-elevation-and-on-trail-distance-design.md` — elevation + on-trail route (D-012 tier 2).
+- `specs/2026-06-12-terrain-and-named-feature-polish-design.md` — hillshade / named features / HUD (D-012 tier 3).
+- `specs/2026-06-12-cicd-pipeline-design.md` — autonomous PR-train delivery + GitHub Pages live demo (D-014).
+- `research/moab-data-sources.md` — verified keyless data sources (OSM / BLM / UGRC / USGS / Esri).
+
+> Note: `ATTRIBUTION.md` (AI commit-message convention) is distinct from the implementation-time
+> `DATA-SOURCES.md` (per-dataset data attribution).
+
 ## Important agent rule
 
 When authoring commits, PR text, implementation notes, or repo messages, follow `ATTRIBUTION.md`.

@@ -67,7 +67,7 @@ A minimal prototype should let a reviewer:
 5. Check in to earn points.
 6. Complete the quest.
 7. Earn badges.
-8. See mock access-layer status.
+8. See real-ownership-derived access-tier status.
 9. Read a quest briefing that feels AI-generated.
 
 ## Recommended project name
@@ -146,7 +146,7 @@ The first implementation should avoid complexity:
 - no backend
 - no auth
 - no real onX data
-- no real private land data
+- no authoritative or real-time land-access status (real ownership geometry **is** used, reclassified into illustrative tiers — see D-011/D-013)
 - no legal access claims
 - no production photo verification
 - no real-time multiplayer

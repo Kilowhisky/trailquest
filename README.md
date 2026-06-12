@@ -28,7 +28,7 @@ The prototype should demonstrate:
 
 - geospatial reasoning, not just UI polish
 - coordinates, waypoints, and geofenced check-ins
-- mock access-aware validation using fictional public/caution/restricted polygons
+- access-aware validation using **real** land-ownership polygons (BLM/UGRC/NPS) reclassified into illustrative public/caution/restricted tiers
 - scoring and badges tied to outdoor accomplishments
 - AI-generated quest briefings or challenge copy
 - a clear AI-assisted engineering process
@@ -45,7 +45,7 @@ TrailQuest should use geospatial data directly:
 - point-in-polygon access validation
 - route/checkpoint sequencing
 - simulated current location
-- mock public/private/caution land layers
+- real land-ownership layers reclassified into public/caution/restricted access tiers
 
 ## Why this is onX-relevant
 
@@ -57,21 +57,34 @@ TrailQuest is not intended to copy onX. It is a feature hypothesis:
 
 ## Current repository state
 
-This repo currently contains planning artifacts only:
+This repo currently contains planning artifacts only (no application code yet):
 
 ```text
 README.md
 CHANGELOG.md
 docs/
+  README.md              # docs index
   CONTEXT.md
   DOMAIN-CONTEXT.md
   GENESIS.md
-  DECISIONS.md
+  DECISIONS.md           # D-001 … D-013
   MEMORY.md
   CHAT-LOG.md
+  ATTRIBUTION.md         # AI commit-message convention
+  plans/
+    IMPLEMENTATION-PLAN.md
+  specs/
+    scoring-design.md
+    testing-plan.md
+    2026-06-12-fog-of-war-discovery-design.md
+    2026-06-12-real-attribute-surfacing-design.md
+    2026-06-12-elevation-and-on-trail-distance-design.md
+    2026-06-12-terrain-and-named-feature-polish-design.md
+  research/
+    moab-data-sources.md
 ```
 
-Implementation is the next step.
+Implementation (scaffolding the app) is the next step.
 
 ## Agent handoff protocol
 
@@ -90,13 +103,14 @@ Use a simple frontend-only prototype:
 
 ```text
 Vite + React + TypeScript
-Leaflet or MapLibre for maps
+Leaflet (react-leaflet) for maps; keyless Esri World Imagery basemap
 Turf.js for geospatial calculations
-Static fixture data for quests and access zones
+Real Moab geometry (OSM/BLM/UGRC), fetched at authoring time and committed static
+Mock only the game layer (quest, scoring, badges, access tiers)
 No backend
 No auth
 No real GPS dependency
-No real land-access claims
+No legal/authoritative land-access claims
 ```
 
 ## MVP scope
@@ -110,7 +124,7 @@ A reviewer should be able to:
 5. See distance-to-checkpoint and inside/outside geofence state.
 6. Check in when inside a geofence.
 7. Earn points and badges.
-8. See mock access layers and checkpoint access status.
+8. See real-ownership-derived access tiers and checkpoint access status.
 9. Understand the product and engineering tradeoffs from the docs.
 
 ## Non-goals
@@ -120,7 +134,7 @@ Do not build these in the first pass:
 - production backend
 - user accounts
 - real onX integration
-- real land ownership data
+- authoritative or real-time land-access status (geometry is real; the access **tiers** are an illustrative game)
 - legal access assertions
 - multiplayer/social network
 - production photo verification

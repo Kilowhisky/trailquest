@@ -66,13 +66,15 @@ onX is strongly associated with public/private land awareness, land boundaries, 
 
 TrailQuest should therefore not be just a scavenger hunt. It should be **access-aware**.
 
-In the prototype, this means using fictional demo polygons for:
+In the prototype, this means using **real land-ownership polygons** (BLM / UGRC / NPS) reclassified into
+game tiers:
 
-- allowed/public area
-- caution area
-- restricted/private area
+- BLM-open → allowed/public area
+- State / SITLA / WSA → caution area
+- NPS (Arches) / private → restricted/private area
 
-The app should avoid making real legal claims.
+Point-in-polygon runs on the real boundaries; the **tier mapping** is the illustrative game. The app should
+avoid making real legal/access claims (see D-011/D-013 and the reframed disclaimer).
 
 Sources:
 
@@ -168,23 +170,26 @@ A public-good quest:
 
 ## Prototype stance
 
-The first prototype should use fictional data only.
+> **Updated 2026-06-12 (D-011 / D-013):** the original stance was "fictional data only." That was reversed.
+> The prototype now uses **real geography with a fictional game layer** — trail lines, land-ownership
+> boundaries, trailheads, and named features are real and sourced (OSM / BLM / UGRC / USGS); the quest,
+> scoring, badges, and access **tiers** are the illustrative game.
 
-Do not imply:
+The geometry (and the verbatim owner labels surfaced from it) is real and sourced. Even so, the prototype
+must not imply:
 
-- real access rights
+- real access *rights* or permission to enter
 - real trail conditions
-- real land ownership
 - real route safety
 - real closure status
 
 Use language like:
 
-- mock access layer
-- fictional demo data
+- real geometry, sourced (OSM / BLM / UGRC / USGS)
+- illustrative access tiers (a reclassification of real ownership — not authoritative)
+- fictional game layer / demo data
 - conceptual prototype
-- not legal guidance
-- not production navigation data
+- not legal, navigational, or land-access guidance
 
 ## What would make this compelling to onX
 

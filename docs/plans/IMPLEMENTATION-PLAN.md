@@ -45,6 +45,21 @@ Real-data authenticity enhancements (decision **D-012**) span three specs:
 Verified new endpoints: USGS 3DEP EPQS (elevation, public domain) + Esri World Hillshade (keyless);
 named features reuse the already-verified OSM Overpass host.
 
+**Consolidation (decision D-013).** The corpus was reviewed and reconciled; two resolutions bind this plan:
+(1) **No *scored* checkpoint sits in a restricted zone**, so a perfect run = **1000** and the Quest Complete
+badge are reachable. The restricted-block is demonstrated by a **6th, unscored "forbidden" waypoint** just
+inside the NPS/Arches line — its check-in is always blocked (grants **Access Aware**, **no points**, **not**
+counted toward Quest Complete).
+(2) **Access Aware** fires on a blocked restricted check-in **or** a caution check-in; the canonical badge set
+is the **8** listed in core-loop step 5.
+
+**Delivery process (decision D-014).** Implementation runs through the
+[CI/CD pipeline spec](../specs/2026-06-12-cicd-pipeline-design.md): one PR per build step (worktree → GitHub
+Actions CI gate → advisory Copilot review → squash-merge), with a **GitHub Pages live demo** auto-deployed on
+each merge (`https://kilowhisky.github.io/trailquest/`). The scaffold PR (step 1) also lands `ci.yml`,
+`deploy.yml`, ESLint, `.gitignore`, and Vite `base: '/trailquest/'`. Outward-facing setup (public repo, push,
+autonomous loop) awaits explicit user go-ahead.
+
 ## Repo docs convention
 
 Plans, specs, implementation notes, decision/changelog updates, and a running work log live under
@@ -89,8 +104,10 @@ are chosen from the fetched GeoJSON at authoring time.
 - **Access zones** — real **land-ownership** polygons reclassified into tiers: BLM-open → **public**,
   State/SITLA/WSA → **caution**, **NPS (Arches) / private → restricted**. Point-in-polygon runs on
   these real boundaries.
-- **Checkpoints** — 5, anchored to real trailheads / trail junctions along the loop; 3 scenic ones
-  carry **photo prompts**. Real names assigned from the data (no invented places).
+- **Checkpoints** — 5 **scored**, anchored to real trailheads / trail junctions along the loop, all in
+  public/caution zones (D-013); 3 scenic ones carry **photo prompts**. Real names assigned from the data
+  (no invented places). Plus a **6th, unscored "forbidden" waypoint** just inside the restricted NPS/Arches
+  line (always-blocked check-in) for the access-awareness demo.
 - **Geocache** — a fuzzy ~150 m **search circle** placed off the route at a real off-trail spot, with a
   small exact cache geofence inside it (no marker — found by exploring).
 - **Elevation & on-trail route (D-012)** — real per-checkpoint elevation + route climb (USGS 3DEP),
@@ -120,16 +137,18 @@ src/
   lib/utils.ts              // cn() helper (clsx + tailwind-merge) for shadcn
   components/ui/            // shadcn primitives: card, button, badge, dialog (or sonner toaster)
   types/quest.ts            // Quest, Checkpoint (w/ optional photoPrompt + discoveryRadius + elevationFt
-                            //   + difficulty/surface/lengthMi/amenities), AccessZone (w/ ownerLabel),
+                            //   + difficulty/surface/lengthMi/amenities + scored/forbidden flag D-013),
+                            //   AccessZone (w/ ownerLabel),
                             //   QuestRoute (D-012: geometry+segmentMiles+totalMiles+totalGainFt+elevationProfile),
                             //   ZoneClass, Geocache (searchArea + exact geofence), PosterMessage, BadgeId types
   data/sources/             // committed REAL GeoJSON (clipped+simplified at authoring time):
                             //   moab_trails.geojson (OSM), land_ownership.geojson (BLM/UGRC),
                             //   trailheads.geojson, route.geojson (D-012: on-trail path + elevation profile),
                             //   named_features.geojson (D-012: OSM arches/peaks/viewpoints) — + SOURCES.txt
-  data/quest.ts             // the one quest: checkpoints anchored to real trailheads/junctions
+  data/quest.ts             // the one quest: 5 scored checkpoints anchored to real trailheads/junctions
                             //   (w/ [lng,lat] + radius + discoveryRadius + photo prompts); geocache
-                            //   search circle + exact cache geofence at a real off-route spot
+                            //   search circle + exact cache geofence at a real off-route spot;
+                            //   + 1 unscored "forbidden" waypoint inside restricted (D-013)
   data/accessZones.ts       // access polygons DERIVED from land_ownership.geojson, reclassified
                             //   into public/caution/restricted (BLM→public, State/WSA→caution, NPS/private→restricted)
   data/briefing.ts          // Claude-pre-generated briefing + checkpoint prompt copy (uses real trail names)
@@ -147,12 +166,15 @@ src/
                             //   polygons, on-trail quest route line (D-012, from route.geojson), checkpoint
                             //   markers+geofence circles (undiscovered = faint `?` pin, no circle/distance →
                             //   reveal flourish on discovery), geocache search circle (no cache marker),
-                            //   draggable user marker, map-click → moveUser, live coordinate HUD (D-012)
+                            //   forbidden waypoint shown from start as a "restricted — do not enter" marker
+                            //   (D-013), draggable user marker, map-click → moveUser, live coordinate HUD (D-012)
     BriefingCard.tsx        // floating card: AI briefing (incl. geocache hint) + "fictional data" disclaimer
     ScoreCard.tsx           // floating card: total `current/max`, breakdown line, earned badge chips;
                             //   D-012: route summary `6.2 mi · +840 ft` + inline elevation sparkline (SVG)
     CheckpointPanel.tsx     // floating card/drawer: checkpoint list, distance, check-in/photo buttons;
                             //   undiscovered rows render locked ("??? — undiscovered", no distance/buttons);
+                            //   forbidden waypoint = always-visible "⛔ restricted — do not enter" row whose
+                            //   check-in always blocks (grants Access Aware, no points, D-013);
                             //   D-012: real attribute chips (difficulty/surface/mileage), elevation, amenities
     AccessBanner.tsx        // current zone status (public/caution/restricted) + D-012 verbatim ownerLabel
                             //   subline (e.g. "Arches National Park — NPS"; named WSA on caution) w/ source tag
@@ -192,7 +214,8 @@ docs/
    its `?` pin resolves into the named marker + geofence (reveal flourish + `Discovered: <name>` toast),
    and its `CheckpointPanel` row unlocks. Discovery never reverses and never auto-checks-in.
 4. **Check-in** is enabled only when **discovered and** inside a checkpoint geofence:
-   - inside **restricted** → check-in **blocked** with a "do not enter" message;
+   - inside **restricted** → check-in **blocked** with a "do not enter" message (in this quest only the 6th
+     **forbidden waypoint** is in restricted; the 5 scored checkpoints are public/caution — D-013);
    - inside **caution** → check-in allowed but flagged with a warning, and the run's
      `cautionCheckedIn` flag flips true (forfeits the Clean Run bonus);
    - **public** → normal.
@@ -200,7 +223,7 @@ docs/
    **checkpoint** +100 (×5 = 500) · **photo bonus** +50 (×3 scenic = 150) · **geocache** +250 ·
    **Clean Run** +100 (evaluated at completion if `cautionCheckedIn` is false). Badges:
    "Trailhead", "Access Aware", "Shutterbug", "Cache Hunter", "Clean Run", "Pathfinder"
-   (all checkpoints discovered — **no points**), "Left Your Mark", "Quest Complete".
+   (all **5 scored** checkpoints discovered — **no points**), "Left Your Mark", "Quest Complete".
    `computeTotals` returns `{current, max, breakdown}` for the ScoreCard.
 6. Photo prompt: at a checkpoint with a prompt, a mock **"I got the shot"** button grants +50.
 7. **Geocache sidequest:** while inside the fuzzy search circle, live distance is computed but the
@@ -269,8 +292,9 @@ behind prose).
 - **Manual loop**: checkpoints start as faint `?` pins / locked panel rows. Drag/click toward one → on
   crossing its **discoveryRadius** it resolves (flourish + `Discovered:` toast, row unlocks) — check-in
   stays disabled until you also enter the tighter geofence. Continue into the geofence → distance hits 0,
-  check-in enables → check in → score (+100) + badge update. Move into the **restricted** zone's checkpoint
-  → check-in blocked. Move into the **caution** zone → check-in flagged (Clean Run forfeited). Tap photo
+  check-in enables → check in → score (+100) + badge update. Move to the **forbidden waypoint** inside the
+  **restricted** zone → check-in blocked (Access Aware, no points, not counted toward Quest Complete). Move
+  into the **caution** zone → check-in flagged (Clean Run forfeited). Tap photo
   bonus → +50, "Shutterbug" earned. Explore inside the **geocache search circle** → +250, "Cache Hunter".
   Discover all checkpoints → "Pathfinder" (no points). Visit all reachable checkpoints → "Quest Complete" →
   **posterboard** opens → add a message → "Left Your Mark". Confirm ScoreCard shows `current/max` (max 1000,
