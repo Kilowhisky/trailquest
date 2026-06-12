@@ -1,0 +1,11 @@
+# Normalize line endings to LF for all text files so Windows checkouts and the
+# Linux CI runner agree (avoids spurious diffs and CRLF/LF lint churn).
+* text=auto eol=lf
+
+# Binary assets git should never touch.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
