@@ -188,6 +188,33 @@ Future implementation should add or expand an `AI_USAGE.md` or similar doc after
 
 ---
 
+## D-009: Keep agent memory and chat logs in docs
+
+**Date:** 2026-06-12
+
+### Decision
+
+Keep persistent agent memory and chronological AI-agent chat/session logs inside the `docs/` folder.
+
+Specifically:
+
+- `docs/MEMORY.md` holds durable agent state, current implementation status, constraints, and next best actions.
+- `docs/CHAT-LOG.md` holds chronological summaries of meaningful AI-agent sessions.
+
+### Context
+
+The project will likely be handed from ChatGPT/bootstrap work to Claude Code / Claude Max implementation work. Without explicit memory and session logs, future agents may lose context, repeat decisions, or overbuild.
+
+### Rationale
+
+Putting agent state inside `docs/` makes the AI process visible, versioned, reviewable, and easy for future sessions to discover.
+
+### Consequences
+
+Future agents should read these files before major work and update them after meaningful sessions. These files are part of the take-home artifact and should remain concise and factual.
+
+---
+
 ## Open questions
 
 These are intentionally unresolved for the implementation agent to consider:
