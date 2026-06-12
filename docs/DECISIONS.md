@@ -252,6 +252,59 @@ and an end-of-quest posterboard where users leave a message for the next quester
 
 ---
 
+## D-011: Pin testing strategy and the spatial/scoring semantics it depends on
+
+**Date:** 2026-06-12
+
+### Decision
+
+Adopt the testing plan in [docs/specs/testing-plan.md](specs/testing-plan.md): **Vitest** unit tests
+on the pure `lib/geo.ts` and `lib/scoring.ts`, plus **reducer tests** on `state/questReducer.ts`
+(the geo + scoring integration seam), plus **one `App` smoke test** with `react-leaflet` mocked.
+Skip E2E/Playwright and map-render testing. Tests are written **alongside** each module as it is
+built (resolving open question #4 below), not deferred to after the demo loop.
+
+In the course of pinning the tests, lock down five previously-ambiguous behaviors:
+
+1. **Geofence boundary is inclusive** — a point exactly at `radius` meters is *inside*
+   (`distance <= radius`).
+2. **Zone precedence on overlap: `restricted > caution > public`** — most-restrictive wins. This
+   puts onX's access-aware ethos ([D-004](#d-004-include-access-awareness-as-a-first-class-concept))
+   into the spatial logic, not just the copy.
+3. **A point outside all access polygons classifies as `'public'`** — a permissive fallback so
+   check-in still works; the broad public zone is expected to cover the play area regardless.
+4. **All scoring bonuses are idempotent** — check-in, photo bonus, and geocache find each award
+   exactly once; re-dispatch is a no-op.
+5. **Restricted check-ins are gated in the reducer, not in `applyCheckIn`** — the reducer blocks the
+   check-in (no points, no status change) but still grants the `Access Aware` badge, since that
+   badge fires on a *heeded* warning. `applyCheckIn` stays pure and assumes an allowed check-in.
+
+### Context
+
+The implementation plan committed to "Vitest on pure geo functions + one component smoke test" but
+did not enumerate cases, and the scoring spec left several boundary behaviors implicit (overlap
+precedence, geofence edge, idempotency, where restricted-zone gating lives). Writing a concrete test
+inventory forced each of these into the open.
+
+### Rationale
+
+- The pure geo/scoring layer is where the spatial reasoning lives and where bugs are silent, so it
+  earns the most tests; for a process-judged take-home the tests also **document** that reasoning.
+- A reducer test layer was added because the original plan tested the pure ends but not the seam
+  that wires them together — the realistic home for integration bugs.
+- The five semantics are decisions, not test trivia: each changes observable behavior, so each is
+  recorded here and asserted by exactly one test.
+
+### Consequences
+
+- `lib/geo.ts` must implement inclusive geofences and most-restrictive zone precedence with a
+  `'public'` default; `lib/scoring.ts` must enforce once-only bonuses; the reducer owns
+  restricted-zone gating and the `Access Aware`-on-block rule.
+- Suite is ~29 small, fast tests (no DOM except the single smoke test). E2E and map rendering remain
+  out of scope, covered by the plan's manual verification checklist.
+
+---
+
 ## Open questions
 
 These are intentionally unresolved for the implementation agent to consider:
@@ -259,7 +312,9 @@ These are intentionally unresolved for the implementation agent to consider:
 1. Should the first map use Leaflet or MapLibre?
 2. Should the quest fixture be TypeScript objects or GeoJSON?
 3. Should the UI be a single-page app with one quest or support multiple quests?
-4. Should tests be included immediately or after the first demo loop works?
+4. ~~Should tests be included immediately or after the first demo loop works?~~ **Resolved by
+   [D-011](#d-011-pin-testing-strategy-and-the-spatialscoring-semantics-it-depends-on): written
+   alongside each module.**
 5. Should the app include a generated briefing as static text or a mock AI generation panel?
 6. Should Mermaid diagrams live in a future `ARCHITECTURE.md` file or be added during implementation?
 
