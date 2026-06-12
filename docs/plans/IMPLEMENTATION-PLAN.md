@@ -30,8 +30,10 @@ This plan reflects only the chosen approach.
 | UI kit | Tailwind v4 + a few shadcn/ui primitives (Card, Button, Badge, Dialog/Toast) |
 | Theme | Dark, rugged outdoor; warm orange/amber accent; high contrast |
 | Basemap | Keyless **Esri World Imagery** (satellite); access zones as bold semi-transparent overlays |
+| Data grounding | **Real** Moab geometry — OSM trails + BLM/UGRC land ownership & trailheads; **only the game layer is mocked**, never contradict local knowledge/imagery (**D-011**) |
 
 Full scoring detail lives in [`docs/specs/scoring-design.md`](../specs/scoring-design.md) (decision **D-010**).
+Verified data sources + endpoints live in [`docs/research/moab-data-sources.md`](../research/moab-data-sources.md) (decision **D-011**, which amends D-002/D-004).
 
 ## Repo docs convention
 
@@ -58,18 +60,37 @@ Plans, specs, implementation notes, decision/changelog updates, and a running wo
 - Use the **`frontend-design` skill** during implementation to compose the floating overlay cards
   (briefing / score / checkpoint / access banner) so they read polished, not generic.
 - **Vitest + @testing-library/react** for the test suite.
+- **Authoring-time data tooling (one-time, NOT runtime deps):** OSM via Overpass API, BLM/UGRC ArcGIS
+  REST (`f=geojson`); `osmtogeojson` to convert OSM, `mapshaper` or `@turf/simplify` to clip-to-bbox +
+  simplify. Output is **committed static GeoJSON** — the app makes **no runtime calls** to these hosts
+  (they send no CORS headers). Full endpoint list in `docs/research/moab-data-sources.md`.
 
-## Demo setting (all fictional / demo data)
+## Demo setting (real geography, fictional game)
 
-A fictional offroad loop near **Moab, UT** (onX Offroad heartland), center ≈ `[-109.55, 38.57]`.
-Five checkpoints within a small clickable area: Staging Area → Rim Overlook → Slot Canyon View →
-Bailout Junction → Loop Finish. **Photo prompts** on the 3 scenic ones (Rim Overlook, Slot Canyon
-View, Loop Finish). Three mock access polygons: a broad **public** zone, one **caution** zone
-(e.g. a wash), and one **restricted** parcel overlapping near one checkpoint to demonstrate blocked
-check-in. One **hidden geocache**: a fuzzy ~150 m **search circle** off the main route with a small
-exact cache geofence inside it (no marker — found by exploring). A **posterboard** appears on quest
-completion, pre-seeded with 3–4 fictional prior-quester messages. Everything labeled "fictional demo
-data — not legal/access guidance" in the UI.
+A quest over a **real** Moab, UT trail system (onX Offroad heartland). Recommended area:
+**Klondike Bluffs / Bar M (Moab Brands)** — real BLM singletrack that runs right up against the
+**Arches National Park** boundary, which gives an authentic public-BLM-vs-restricted-NPS edge for the
+access mechanic (locals know it; it reads true on the imagery). Final center/bbox + exact checkpoints
+are chosen from the fetched GeoJSON at authoring time.
+
+**Real, sourced (must match imagery + local knowledge):**
+
+- **Trail lines** — OSM hero trails for the chosen system (real names, real geometry).
+- **Access zones** — real **land-ownership** polygons reclassified into tiers: BLM-open → **public**,
+  State/SITLA/WSA → **caution**, **NPS (Arches) / private → restricted**. Point-in-polygon runs on
+  these real boundaries.
+- **Checkpoints** — 5, anchored to real trailheads / trail junctions along the loop; 3 scenic ones
+  carry **photo prompts**. Real names assigned from the data (no invented places).
+- **Geocache** — a fuzzy ~150 m **search circle** placed off the route at a real off-trail spot, with a
+  small exact cache geofence inside it (no marker — found by exploring).
+
+**Mocked (the game layer, clearly labeled):** quest storyline/briefing, point values, badges, photo
+prompts, the geocache objective, and the completion **posterboard** (pre-seeded with 3–4 fictional
+prior-quester messages, session-only).
+
+**Disclaimer shown in-app:** *"Trail and land geometry are real and sourced (OSM / BLM / UGRC); the
+quest, scoring, and access tiers are a fictional game — not legal, navigational, or land-access
+guidance."* Attribution string per `docs/DATA-SOURCES.md`.
 
 ## File plan
 
@@ -83,10 +104,15 @@ src/
   components/ui/            // shadcn primitives: card, button, badge, dialog (or sonner toaster)
   types/quest.ts            // Quest, Checkpoint (w/ optional photoPrompt), AccessZone, ZoneClass,
                             //   Geocache (searchArea + exact geofence), PosterMessage, BadgeId types
-  data/quest.ts             // the one hardcoded quest (checkpoints w/ [lng,lat] + radius + photo prompts;
-                            //   geocache search circle + exact cache geofence)
-  data/accessZones.ts       // 3 typed polygons w/ GeoJSON Polygon coords
-  data/briefing.ts          // Claude-pre-generated briefing + checkpoint prompt copy
+  data/sources/             // committed REAL GeoJSON (clipped+simplified at authoring time):
+                            //   moab_trails.geojson (OSM), land_ownership.geojson (BLM/UGRC),
+                            //   trailheads.geojson — + SOURCES.txt with attribution per file
+  data/quest.ts             // the one quest: checkpoints anchored to real trailheads/junctions
+                            //   (w/ [lng,lat] + radius + photo prompts); geocache search circle +
+                            //   exact cache geofence at a real off-route spot
+  data/accessZones.ts       // access polygons DERIVED from land_ownership.geojson, reclassified
+                            //   into public/caution/restricted (BLM→public, State/WSA→caution, NPS/private→restricted)
+  data/briefing.ts          // Claude-pre-generated briefing + checkpoint prompt copy (uses real trail names)
   data/posterboard.ts       // 3–4 pre-seeded fictional prior-quester messages
   lib/geo.ts                // PURE: distanceMeters, isInsideGeofence, classifyAccess (point-in-polygon)
   lib/scoring.ts            // PURE: applyCheckIn, applyPhotoBonus, applyGeocacheFind,
@@ -106,12 +132,16 @@ src/
   lib/scoring.test.ts       // ~8–12 cases: check-in points, photo bonus, geocache find, clean-run
                             //   eval (caution forfeits it), badge awarding, computeTotals max=1000
   components/App.test.tsx   // smoke render (mock react-leaflet) — app mounts, briefing visible
+scripts/
+  fetch-moab-data.mjs       // authoring-time: pull OSM/BLM/UGRC → clip to bbox → simplify → write src/data/sources/*
 docs/
   plans/IMPLEMENTATION-PLAN.md  // this plan, committed to the repo
   AI_USAGE.md                   // NEW: briefing/copy generation prompts + how AI was used
   WORKLOG.md                    // NEW: running work/chat log
+  DATA-SOURCES.md               // NEW: per-dataset attribution (OSM ODbL · UGRC CC BY 4.0 · BLM public domain · Esri)
   ARCHITECTURE.md               // NEW (nice-to-have): short overview + one Mermaid loop diagram
-  (update CHANGELOG.md + DECISIONS.md — resolve D-00x open questions)
+  research/moab-data-sources.md // EXISTS: verified endpoints + D-011 grounding decision
+  (update CHANGELOG.md + DECISIONS.md — resolve D-00x open questions; add D-011 amending D-002/D-004)
 ```
 
 ## Core loop & logic
@@ -145,22 +175,33 @@ behind prose).
 
 1. **Scaffold + UI kit**: Vite+React+TS, add Tailwind v4 (`@tailwindcss/vite`) + shadcn init, install
    leaflet/react-leaflet/turf; render an Esri-satellite Leaflet map at Moab; set dark/orange theme tokens. *(~20 min)*
-2. **Data + types**: quest fixture (checkpoints + photo prompts + geocache search/exact geofences),
-   access zones, briefing copy (incl. geocache hint), posterboard seed messages. *(~15 min)*
-3. **`lib/geo.ts` + tests**: distance, geofence, point-in-polygon classification; Vitest green. *(~20 min)*
-4. **MapView**: zones (bold semi-transparent overlays over satellite), checkpoints+geofences,
-   geocache search circle (no cache marker), draggable/click user marker, live distance. *(~25 min)*
-5. **Scoring + state + cards**: `lib/scoring.ts` + `scoring.test.ts` (check-in/photo/geocache/clean-run/
+2. **Source + ground real data** (`scripts/fetch-moab-data.mjs`): pull OSM hero trails + BLM/UGRC land
+   ownership + trailheads, clip to the Moab bbox, simplify, reclassify ownership → access tiers; commit
+   `data/sources/*.geojson` + `docs/DATA-SOURCES.md`. Pick final checkpoints from the real geometry,
+   sanity-checking each against the satellite imagery. *(~20 min)*
+3. **Data + types**: quest fixture (checkpoints from real trailheads + photo prompts + geocache
+   search/exact geofences), `accessZones` from the reclassified ownership, briefing copy (real names +
+   geocache hint), posterboard seed messages. *(~15 min)*
+4. **`lib/geo.ts` + tests**: distance, geofence, point-in-polygon classification; Vitest green. *(~20 min)*
+5. **MapView**: zones (bold semi-transparent overlays over satellite), real trail lines, checkpoints+geofences,
+   geocache search circle (no cache marker), draggable/click user marker, live distance, attribution control. *(~25 min)*
+6. **Scoring + state + cards**: `lib/scoring.ts` + `scoring.test.ts` (check-in/photo/geocache/clean-run/
    badges/totals); reducer; check-in with access gating + blocked-check-in toast/dialog; geocache find;
    ScoreCard (`current/max` + breakdown), photo bonus, PosterboardDialog on completion; floating overlay
    cards via `frontend-design`. *(~30 min)*
-6. **Polish + docs**: disclaimers, write `docs/AI_USAGE.md` + `docs/WORKLOG.md`
+7. **Polish + docs**: disclaimers, write `docs/AI_USAGE.md` + `docs/WORKLOG.md`
    + `docs/ARCHITECTURE.md`, smoke test, update `CHANGELOG.md` + resolve `DECISIONS.md` open questions. *(~15 min)*
+
+> Real-data sourcing adds ~20 min (total ~145 min). Trim by using fewer hero trails / a tighter bbox if
+> the timebox is tight; the authoring fetch is the only added work — runtime stays static + frontend-only.
 
 ## Verification
 
 - `npm install && npm run dev` → open localhost; confirm map, 5 checkpoints, geofence circles, 3 zones,
   briefing/score/checkpoint cards all render.
+- **Real-data sanity:** trail lines + access polygons visibly line up with the Esri satellite imagery
+  (trails follow visible tracks; the restricted zone sits on the real Arches/NPS or private boundary);
+  attribution control shows OSM/BLM/UGRC/Esri credits; no checkpoint contradicts the imagery.
 - **Manual loop**: drag/click into a checkpoint geofence → distance hits 0, check-in enables → check in →
   score (+100) + badge update. Move into the **restricted** zone's checkpoint → check-in blocked. Move into
   the **caution** zone → check-in flagged (Clean Run forfeited). Tap photo bonus → +50, "Shutterbug" earned.
@@ -172,5 +213,10 @@ behind prose).
 
 ## Out of scope (per non-goals)
 
-Backend, auth, real GPS, real land/access data, legal claims, multiplayer, real photo verification,
-multiple quests, persistence. All listed as roadmap items, not built in this pass.
+Backend, auth, real GPS, multiplayer, real photo verification, multiple quests, persistence. All
+listed as roadmap items, not built in this pass.
+
+**Note (D-011):** real trail/land *geometry* is now in scope and sourced — but **legal/authoritative
+access assertions, real-time closures, and routing are still out of scope.** The access tiers are an
+illustrative reclassification of real ownership, surfaced with a clear "not legal/navigational guidance"
+disclaimer; we never assert real-world permission to enter.
