@@ -93,3 +93,21 @@ Strongest authenticity-per-minute, keeping the frontend-only / commit-static arc
 
 **Authoring step (to add to build sequence):** fetch via the URLs above → clip to a tight Moab bbox →
 simplify (Turf/mapshaper) to keep files small → commit GeoJSON + attribution. No runtime calls to these hosts.
+
+## Decision (2026-06-12): full grounding, real geometry + mock game only
+
+Approved direction: **make the geography as real as possible; mock only the invented game layer.**
+
+Governing principle — **never contradict what a local would know or what the satellite imagery shows:**
+- Trail lines, land boundaries, trailheads, and checkpoint placements come from the verified sources
+  above and must line up with the Esri imagery (no checkpoint on bare slickrock described as a creek;
+  no labeling the public Slickrock Trail as private).
+- **Access tiers are derived from real land ownership** so they can't misrepresent reality:
+  BLM-open → public · State/SITLA/WSA → caution · NPS / private → restricted.
+- **Mock only:** quest storyline, point values, badges, photo prompts, and the specific challenge
+  objectives — all clearly illustrative.
+- **Disclaimer reframe:** "trail and land geometry are real and sourced; the quest and scoring are a
+  fictional game — not legal, navigational, or land-access guidance."
+
+Follow-up (when consolidating, to avoid clobbering parallel edits): amend `DECISIONS.md` D-002/D-004
+to record this reversal, and add `docs/DATA-SOURCES.md` with the attribution block during implementation.
