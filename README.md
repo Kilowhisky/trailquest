@@ -1,0 +1,129 @@
+# TrailQuest
+
+**AI-generated, access-aware outdoor scavenger hunts for exploration, off-roading, and trail discovery.**
+
+TrailQuest is an early geospatial product prototype created for an onX Maps AI take-home project. The project starts from a simple idea: maps already help outdoor users answer **where am I?** and **where can I go?** TrailQuest explores a third question:
+
+> What should I go do outside today?
+
+The concept turns map primitives — waypoints, coordinates, geofences, routes, access layers, and trail metadata — into scored outdoor quests. A user can complete checkpoints, earn points, optionally satisfy photo prompts, and finish a safe/legal challenge route.
+
+This repository is intentionally initialized as a **handoff package for Claude Code / Claude Max**. The first commit establishes project context, product direction, decisions, and domain notes before implementation begins.
+
+## Take-home prompt
+
+The original assignment:
+
+> Build out, assisted by AI, any application that would be considered "geospatial" — no other prescription. Anything dealing with geospatial data: displaying, manipulating, or understanding it. Bonus points if it loosely resembles something you wish onX would do.
+>
+> We're evaluating your work and thinking process with AI, not a polished or fully working result. Plan for 1–2 hours max.
+>
+> The only deliverable is a GitHub repository, including any artifacts you feel help document what you've done.
+
+## Product thesis
+
+TrailQuest is a gamified exploration layer that could plausibly sit on top of an outdoor mapping product like onX.
+
+The prototype should demonstrate:
+
+- geospatial reasoning, not just UI polish
+- coordinates, waypoints, and geofenced check-ins
+- mock access-aware validation using fictional public/caution/restricted polygons
+- scoring and badges tied to outdoor accomplishments
+- AI-generated quest briefings or challenge copy
+- a clear AI-assisted engineering process
+
+## Why this is geospatial
+
+TrailQuest should use geospatial data directly:
+
+- map rendering
+- waypoint markers
+- latitude/longitude coordinates
+- distance calculations
+- geofence radius checks
+- point-in-polygon access validation
+- route/checkpoint sequencing
+- simulated current location
+- mock public/private/caution land layers
+
+## Why this is onX-relevant
+
+onX products already center around outdoor confidence, navigation, access, trails, offline use, and user-created map data. The public onX Offroad feature set includes offline maps, route building, trail reports, location sharing, custom waypoints, private land boundaries, off-road trail maps, trail difficulty ratings, recreation points, and turn-by-turn/off-grid navigation.
+
+TrailQuest is not intended to copy onX. It is a feature hypothesis:
+
+> If users already plan, navigate, mark, share, and track outdoor experiences, a quest layer could give them structured reasons to explore.
+
+## Current repository state
+
+This repo currently contains planning artifacts only:
+
+```text
+README.md
+CHANGELOG.md
+docs/
+  CONTEXT.md
+  DOMAIN-CONTEXT.md
+  GENESIS.md
+  DECISIONS.md
+```
+
+Implementation is the next step.
+
+## Recommended implementation direction
+
+Use a simple frontend-only prototype:
+
+```text
+Vite + React + TypeScript
+Leaflet or MapLibre for maps
+Turf.js for geospatial calculations
+Static fixture data for quests and access zones
+No backend
+No auth
+No real GPS dependency
+No real land-access claims
+```
+
+## MVP scope
+
+A reviewer should be able to:
+
+1. Open the app locally.
+2. See a map with a quest and 4–6 checkpoints.
+3. Read an AI-styled quest briefing.
+4. Move a simulated user location.
+5. See distance-to-checkpoint and inside/outside geofence state.
+6. Check in when inside a geofence.
+7. Earn points and badges.
+8. See mock access layers and checkpoint access status.
+9. Understand the product and engineering tradeoffs from the docs.
+
+## Non-goals
+
+Do not build these in the first pass:
+
+- production backend
+- user accounts
+- real onX integration
+- real land ownership data
+- legal access assertions
+- multiplayer/social network
+- production photo verification
+- mobile app shell
+- paid map provider dependency
+
+## Suggested next command for Claude Code
+
+```text
+Read README.md and all files in docs/. Then propose a minimal 1–2 hour implementation plan for TrailQuest. After the plan, scaffold the app and implement the smallest demoable version of the geospatial quest loop.
+```
+
+## Source notes
+
+The domain context references public onX pages, including:
+
+- https://www.onxmaps.com/about
+- https://www.onxmaps.com/offroad/app/features
+- https://www.onxmaps.com/offroad/app/features/offline-maps
