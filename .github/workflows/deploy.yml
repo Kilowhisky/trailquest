@@ -32,6 +32,15 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # `vite build` does not typecheck, and the first deploy fires before branch
+      # protection exists — so re-run the full gate here to guarantee main never
+      # publishes a broken build, independent of CI / branch protection.
+      - name: Verify (typecheck · lint · test)
+        run: |
+          npm run typecheck
+          npm run lint
+          npm run test:run
+
       - name: Build (emits dist/ with /trailquest/ base)
         run: npm run build
 
