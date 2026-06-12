@@ -22,10 +22,16 @@ This plan reflects only the chosen approach.
 | Location control | Click-to-move + draggable "you" marker |
 | Testing | Vitest on pure geo functions + one component smoke test |
 | Photo prompts | Self-attest "I got the shot" bonus button (mock, clearly labeled) |
+| Scoring | Objective-based, **perfect run = 1000 pts**; **no time bonus** (teleport-friendly sim location) |
+| Sidequest | Hidden **geocache** found via a fuzzy ~150 m search circle off-route (+250, "Cache Hunter") |
+| Access scoring | **Clean Run** bonus (+100) for finishing with no caution-zone check-ins |
+| Posterboard | Mock, **session-only** completion guestbook; grants a badge, no points (extends D-005) |
 | Layout | Floating overlay cards over a full-screen map |
 | UI kit | Tailwind v4 + a few shadcn/ui primitives (Card, Button, Badge, Dialog/Toast) |
 | Theme | Dark, rugged outdoor; warm orange/amber accent; high contrast |
 | Basemap | Keyless **Esri World Imagery** (satellite); access zones as bold semi-transparent overlays |
+
+Full scoring detail lives in [`docs/specs/scoring-design.md`](../specs/scoring-design.md) (decision **D-010**).
 
 ## Repo docs convention
 
@@ -57,9 +63,13 @@ Plans, specs, implementation notes, decision/changelog updates, and a running wo
 
 A fictional offroad loop near **Moab, UT** (onX Offroad heartland), center ≈ `[-109.55, 38.57]`.
 Five checkpoints within a small clickable area: Staging Area → Rim Overlook → Slot Canyon View →
-Bailout Junction → Loop Finish. Three mock access polygons: a broad **public** zone, one **caution**
-zone (e.g. a wash), and one **restricted** parcel overlapping near one checkpoint to demonstrate
-blocked check-in. Everything labeled "fictional demo data — not legal/access guidance" in the UI.
+Bailout Junction → Loop Finish. **Photo prompts** on the 3 scenic ones (Rim Overlook, Slot Canyon
+View, Loop Finish). Three mock access polygons: a broad **public** zone, one **caution** zone
+(e.g. a wash), and one **restricted** parcel overlapping near one checkpoint to demonstrate blocked
+check-in. One **hidden geocache**: a fuzzy ~150 m **search circle** off the main route with a small
+exact cache geofence inside it (no marker — found by exploring). A **posterboard** appears on quest
+completion, pre-seeded with 3–4 fictional prior-quester messages. Everything labeled "fictional demo
+data — not legal/access guidance" in the UI.
 
 ## File plan
 
@@ -71,21 +81,30 @@ src/
   index.css                 // Tailwind v4 entry + dark/orange theme tokens (CSS vars)
   lib/utils.ts              // cn() helper (clsx + tailwind-merge) for shadcn
   components/ui/            // shadcn primitives: card, button, badge, dialog (or sonner toaster)
-  types/quest.ts            // Quest, Checkpoint, AccessZone, ZoneClass, Badge types
-  data/quest.ts             // the one hardcoded quest (checkpoints w/ [lng,lat] + radius)
+  types/quest.ts            // Quest, Checkpoint (w/ optional photoPrompt), AccessZone, ZoneClass,
+                            //   Geocache (searchArea + exact geofence), PosterMessage, BadgeId types
+  data/quest.ts             // the one hardcoded quest (checkpoints w/ [lng,lat] + radius + photo prompts;
+                            //   geocache search circle + exact cache geofence)
   data/accessZones.ts       // 3 typed polygons w/ GeoJSON Polygon coords
   data/briefing.ts          // Claude-pre-generated briefing + checkpoint prompt copy
+  data/posterboard.ts       // 3–4 pre-seeded fictional prior-quester messages
   lib/geo.ts                // PURE: distanceMeters, isInsideGeofence, classifyAccess (point-in-polygon)
-  lib/scoring.ts            // PURE: applyCheckIn, awardBadges, totals
-  state/questReducer.ts     // useReducer: checkpoint statuses, score, badges, currentZone
+  lib/scoring.ts            // PURE: applyCheckIn, applyPhotoBonus, applyGeocacheFind,
+                            //   evaluateCleanRun, awardBadges, computeTotals → {current, max, breakdown}
+  state/questReducer.ts     // useReducer: checkpoint statuses, foundCache, cautionCheckedIn flag,
+                            //   score, badges, currentZone, posterMessages
   components/
     MapView.tsx             // Esri satellite tiles, zone polygons, checkpoint markers+geofence circles,
-                            //   draggable user marker, map-click → moveUser
-    BriefingCard.tsx        // floating card: AI briefing + "fictional data" disclaimer
-    ScoreCard.tsx           // floating card: score + earned badges
+                            //   geocache search circle (no cache marker), draggable user marker,
+                            //   map-click → moveUser
+    BriefingCard.tsx        // floating card: AI briefing (incl. geocache hint) + "fictional data" disclaimer
+    ScoreCard.tsx           // floating card: total `current/max`, breakdown line, earned badge chips
     CheckpointPanel.tsx     // floating card/drawer: checkpoint list, distance, check-in/photo buttons
     AccessBanner.tsx        // current zone status (public/caution/restricted)
+    PosterboardDialog.tsx   // completion guestbook: seeded messages + add-yours (session-only, "demo — not saved")
   lib/geo.test.ts           // ~6–10 cases: distance, inside/outside geofence, zone classification
+  lib/scoring.test.ts       // ~8–12 cases: check-in points, photo bonus, geocache find, clean-run
+                            //   eval (caution forfeits it), badge awarding, computeTotals max=1000
   components/App.test.tsx   // smoke render (mock react-leaflet) — app mounts, briefing visible
 docs/
   plans/IMPLEMENTATION-PLAN.md  // this plan, committed to the repo
@@ -104,11 +123,19 @@ docs/
    and the **current access zone** (point-in-polygon). `AccessBanner` reflects the zone.
 4. **Check-in** is enabled only when inside a checkpoint geofence:
    - inside **restricted** → check-in **blocked** with a "do not enter" message;
-   - inside **caution** → check-in allowed but flagged with a warning;
+   - inside **caution** → check-in allowed but flagged with a warning, and the run's
+     `cautionCheckedIn` flag flips true (forfeits the Clean Run bonus);
    - **public** → normal.
-5. `lib/scoring.ts` awards points (checkpoint base + optional photo bonus), updates badges
-   ("Trailhead", "Access Aware", "Shutterbug", "Quest Complete"), and detects quest completion.
-6. Photo prompt: at a checkpoint with a prompt, a mock **"I got the shot"** button grants a bonus.
+5. `lib/scoring.ts` awards points and updates badges. Point values (perfect run = **1000**):
+   **checkpoint** +100 (×5 = 500) · **photo bonus** +50 (×3 scenic = 150) · **geocache** +250 ·
+   **Clean Run** +100 (evaluated at completion if `cautionCheckedIn` is false). Badges:
+   "Trailhead", "Access Aware", "Shutterbug", "Cache Hunter", "Clean Run", "Left Your Mark",
+   "Quest Complete". `computeTotals` returns `{current, max, breakdown}` for the ScoreCard.
+6. Photo prompt: at a checkpoint with a prompt, a mock **"I got the shot"** button grants +50.
+7. **Geocache sidequest:** while inside the fuzzy search circle, live distance is computed but the
+   cache pin stays hidden; entering the small exact cache geofence fires **+250** + "Cache Hunter".
+8. **Posterboard:** on quest completion, `PosterboardDialog` shows the seeded messages; adding one
+   appends to session state (labeled "demo — not saved") and grants "Left Your Mark". No points.
 
 Keep `lib/geo.ts` and `lib/scoring.ts` **pure and side-effect-free** so the geospatial reasoning is
 unit-testable and obvious to a reviewer (the docs explicitly want the spatial logic visible, not hidden
@@ -118,12 +145,15 @@ behind prose).
 
 1. **Scaffold + UI kit**: Vite+React+TS, add Tailwind v4 (`@tailwindcss/vite`) + shadcn init, install
    leaflet/react-leaflet/turf; render an Esri-satellite Leaflet map at Moab; set dark/orange theme tokens. *(~20 min)*
-2. **Data + types**: quest fixture, access zones, briefing copy. *(~15 min)*
+2. **Data + types**: quest fixture (checkpoints + photo prompts + geocache search/exact geofences),
+   access zones, briefing copy (incl. geocache hint), posterboard seed messages. *(~15 min)*
 3. **`lib/geo.ts` + tests**: distance, geofence, point-in-polygon classification; Vitest green. *(~20 min)*
 4. **MapView**: zones (bold semi-transparent overlays over satellite), checkpoints+geofences,
-   draggable/click user marker, live distance. *(~25 min)*
-5. **Scoring + state + cards**: reducer, check-in (with access gating + blocked-check-in toast/dialog),
-   score/badges, photo bonus, floating overlay cards via `frontend-design`. *(~25 min)*
+   geocache search circle (no cache marker), draggable/click user marker, live distance. *(~25 min)*
+5. **Scoring + state + cards**: `lib/scoring.ts` + `scoring.test.ts` (check-in/photo/geocache/clean-run/
+   badges/totals); reducer; check-in with access gating + blocked-check-in toast/dialog; geocache find;
+   ScoreCard (`current/max` + breakdown), photo bonus, PosterboardDialog on completion; floating overlay
+   cards via `frontend-design`. *(~30 min)*
 6. **Polish + docs**: disclaimers, write `docs/AI_USAGE.md` + `docs/WORKLOG.md`
    + `docs/ARCHITECTURE.md`, smoke test, update `CHANGELOG.md` + resolve `DECISIONS.md` open questions. *(~15 min)*
 
@@ -132,10 +162,12 @@ behind prose).
 - `npm install && npm run dev` → open localhost; confirm map, 5 checkpoints, geofence circles, 3 zones,
   briefing/score/checkpoint cards all render.
 - **Manual loop**: drag/click into a checkpoint geofence → distance hits 0, check-in enables → check in →
-  score + badge update. Move into the **restricted** zone's checkpoint → check-in blocked. Move into the
-  **caution** zone → check-in flagged. Tap photo bonus → score increases, "Shutterbug" earned. Visit all
-  reachable checkpoints → "Quest Complete".
-- `npm test` (Vitest) → geo unit tests + App smoke test pass.
+  score (+100) + badge update. Move into the **restricted** zone's checkpoint → check-in blocked. Move into
+  the **caution** zone → check-in flagged (Clean Run forfeited). Tap photo bonus → +50, "Shutterbug" earned.
+  Explore inside the **geocache search circle** → +250, "Cache Hunter". Visit all reachable checkpoints →
+  "Quest Complete" → **posterboard** opens → add a message → "Left Your Mark". Confirm ScoreCard shows
+  `current/max` (max 1000) and a clean run awards +100.
+- `npm test` (Vitest) → geo unit tests + **scoring unit tests** + App smoke test pass.
 - Skim `docs/AI_USAGE.md` to confirm the AI authoring story is documented honestly.
 
 ## Out of scope (per non-goals)
