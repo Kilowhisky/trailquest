@@ -215,6 +215,43 @@ Future agents should read these files before major work and update them after me
 
 ---
 
+## D-010: Define objective-based scoring; add geocache sidequest and mock posterboard
+
+**Date:** 2026-06-12
+
+### Decision
+
+Adopt an **objective-based scoring model** (perfect run = 1000 pts): checkpoint check-ins
+(100×5), photo bonuses (50×3), a hidden **geocache sidequest** (+250), and an access-aware
+**Clean Run bonus** (+100). **No time-based scoring.** Add a completion **posterboard** as a
+mocked, session-only social reward (no points; grants a badge). Full detail in
+[docs/specs/scoring-design.md](specs/scoring-design.md).
+
+### Context
+
+Scoring was sketched in the implementation plan but lacked concrete values and rules. Two new
+mechanics emerged during brainstorming: a hidden geocache (a discovery-style bonus objective)
+and an end-of-quest posterboard where users leave a message for the next quester.
+
+### Rationale
+
+- Objective-based scoring fits the click-to-move simulated location ([D-003](#d-003-use-simulated-location-instead-of-browser-gps));
+  a speed/time bonus would be meaningless and a visible tell under teleport-style movement.
+- The geocache showcases the geofence primitive in "search" mode and is the most
+  geocaching-native mechanic in the app.
+- A **Clean Run bonus** puts onX's core access-awareness value ([D-004](#d-004-include-access-awareness-as-a-first-class-concept))
+  directly into the score, not just a badge.
+
+### Consequences
+
+- The posterboard is **deliberately mocked** and session-only, extending — not violating —
+  [D-005](#d-005-avoid-backendauthsocial-features-in-the-first-pass): no backend/persistence is
+  added; messages are pre-seeded fixtures plus local state, labeled "demo — not saved." A real
+  persistent/social posterboard becomes a roadmap item.
+- `lib/scoring.ts` gains geocache, photo, and clean-run logic (all pure, unit-tested).
+
+---
+
 ## Open questions
 
 These are intentionally unresolved for the implementation agent to consider:
