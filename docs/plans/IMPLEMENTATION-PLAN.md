@@ -32,9 +32,18 @@ This plan reflects only the chosen approach.
 | Theme | Dark, rugged outdoor; warm orange/amber accent; high contrast |
 | Basemap | Keyless **Esri World Imagery** (satellite); access zones as bold semi-transparent overlays |
 | Data grounding | **Real** Moab geometry — OSM trails + BLM/UGRC land ownership & trailheads; **only the game layer is mocked**, never contradict local knowledge/imagery (**D-011**) |
+| Real attributes | **Surface verbatim source fields** — real land-owner string on the access banner, checkpoint difficulty/surface/mileage, trailhead amenities (**D-012**, [spec](../specs/2026-06-12-real-attribute-surfacing-design.md)) |
+| Elevation & distance | **Real elevation** (USGS 3DEP) per checkpoint + profile/total climb; **on-trail route** snapped to OSM geometry with on-trail mileage vs live straight-line "to target" (**D-012**, [spec](../specs/2026-06-12-elevation-and-on-trail-distance-design.md)) |
+| Terrain & feature polish | Keyless **hillshade** toggle (Esri), photo prompts anchored to real OSM features, **named WSA** caution label, live **coordinate readout** (**D-012**, [spec](../specs/2026-06-12-terrain-and-named-feature-polish-design.md)) |
 
 Full scoring detail lives in [`docs/specs/scoring-design.md`](../specs/scoring-design.md) (decision **D-010**).
 Verified data sources + endpoints live in [`docs/research/moab-data-sources.md`](../research/moab-data-sources.md) (decision **D-011**, which amends D-002/D-004).
+Real-data authenticity enhancements (decision **D-012**) span three specs:
+[attribute surfacing](../specs/2026-06-12-real-attribute-surfacing-design.md) ·
+[elevation & on-trail distance](../specs/2026-06-12-elevation-and-on-trail-distance-design.md) ·
+[terrain & named-feature polish](../specs/2026-06-12-terrain-and-named-feature-polish-design.md).
+Verified new endpoints: USGS 3DEP EPQS (elevation, public domain) + Esri World Hillshade (keyless);
+named features reuse the already-verified OSM Overpass host.
 
 ## Repo docs convention
 
@@ -84,6 +93,13 @@ are chosen from the fetched GeoJSON at authoring time.
   carry **photo prompts**. Real names assigned from the data (no invented places).
 - **Geocache** — a fuzzy ~150 m **search circle** placed off the route at a real off-trail spot, with a
   small exact cache geofence inside it (no marker — found by exploring).
+- **Elevation & on-trail route (D-012)** — real per-checkpoint elevation + route climb (USGS 3DEP),
+  and a quest route **snapped to the OSM trail geometry** so the drawn path follows real singletrack
+  and reported mileage is on-trail (live "distance to target" stays honest great-circle).
+- **Source attributes (D-012)** — the verbatim land-owner string (e.g. *Arches National Park — NPS*),
+  checkpoint difficulty/surface/mileage, and trailhead amenities, shown alongside the game tiers.
+- **Named features (D-012)** — real OSM arches/peaks/viewpoints near scenic checkpoints, woven into
+  the (mocked) photo-prompt copy; never an invented landmark.
 
 **Mocked (the game layer, clearly labeled):** quest storyline/briefing, point values, badges, photo
 prompts, the geocache objective, and the completion **posterboard** (pre-seeded with 3–4 fictional
@@ -103,11 +119,14 @@ src/
   index.css                 // Tailwind v4 entry + dark/orange theme tokens (CSS vars)
   lib/utils.ts              // cn() helper (clsx + tailwind-merge) for shadcn
   components/ui/            // shadcn primitives: card, button, badge, dialog (or sonner toaster)
-  types/quest.ts            // Quest, Checkpoint (w/ optional photoPrompt + discoveryRadius), AccessZone,
+  types/quest.ts            // Quest, Checkpoint (w/ optional photoPrompt + discoveryRadius + elevationFt
+                            //   + difficulty/surface/lengthMi/amenities), AccessZone (w/ ownerLabel),
+                            //   QuestRoute (D-012: geometry+segmentMiles+totalMiles+totalGainFt+elevationProfile),
                             //   ZoneClass, Geocache (searchArea + exact geofence), PosterMessage, BadgeId types
   data/sources/             // committed REAL GeoJSON (clipped+simplified at authoring time):
                             //   moab_trails.geojson (OSM), land_ownership.geojson (BLM/UGRC),
-                            //   trailheads.geojson — + SOURCES.txt with attribution per file
+                            //   trailheads.geojson, route.geojson (D-012: on-trail path + elevation profile),
+                            //   named_features.geojson (D-012: OSM arches/peaks/viewpoints) — + SOURCES.txt
   data/quest.ts             // the one quest: checkpoints anchored to real trailheads/junctions
                             //   (w/ [lng,lat] + radius + discoveryRadius + photo prompts); geocache
                             //   search circle + exact cache geofence at a real off-route spot
@@ -115,22 +134,28 @@ src/
                             //   into public/caution/restricted (BLM→public, State/WSA→caution, NPS/private→restricted)
   data/briefing.ts          // Claude-pre-generated briefing + checkpoint prompt copy (uses real trail names)
   data/posterboard.ts       // 3–4 pre-seeded fictional prior-quester messages
-  lib/geo.ts                // PURE: distanceMeters, isInsideGeofence, classifyAccess (point-in-polygon),
-                            //   checkpointProximity → per-cp {distance, withinDiscovery, withinGeofence}
+  lib/geo.ts                // PURE: distanceMeters, isInsideGeofence, classifyAccess → {tier, ownerLabel}
+                            //   (point-in-polygon, D-012), checkpointProximity → per-cp {distance,
+                            //   withinDiscovery, withinGeofence}; D-012: computeGain(profile),
+                            //   routeTotals(route), formatLatLon(point), toUTM(point)
   lib/scoring.ts            // PURE: applyCheckIn, applyPhotoBonus, applyGeocacheFind,
                             //   evaluateCleanRun, awardBadges, computeTotals → {current, max, breakdown}
   state/questReducer.ts     // useReducer: checkpoint statuses, discovered (one-way latch), foundCache,
                             //   cautionCheckedIn flag, score, badges, currentZone, posterMessages
   components/
-    MapView.tsx             // Esri satellite tiles, zone polygons, checkpoint markers+geofence circles
-                            //   (undiscovered = faint `?` pin, no circle/distance → reveal flourish on
-                            //   discovery), geocache search circle (no cache marker), draggable user
-                            //   marker, map-click → moveUser
+    MapView.tsx             // Esri satellite tiles (+ D-012 optional Esri hillshade overlay toggle), zone
+                            //   polygons, on-trail quest route line (D-012, from route.geojson), checkpoint
+                            //   markers+geofence circles (undiscovered = faint `?` pin, no circle/distance →
+                            //   reveal flourish on discovery), geocache search circle (no cache marker),
+                            //   draggable user marker, map-click → moveUser, live coordinate HUD (D-012)
     BriefingCard.tsx        // floating card: AI briefing (incl. geocache hint) + "fictional data" disclaimer
-    ScoreCard.tsx           // floating card: total `current/max`, breakdown line, earned badge chips
+    ScoreCard.tsx           // floating card: total `current/max`, breakdown line, earned badge chips;
+                            //   D-012: route summary `6.2 mi · +840 ft` + inline elevation sparkline (SVG)
     CheckpointPanel.tsx     // floating card/drawer: checkpoint list, distance, check-in/photo buttons;
-                            //   undiscovered rows render locked ("??? — undiscovered", no distance/buttons)
-    AccessBanner.tsx        // current zone status (public/caution/restricted)
+                            //   undiscovered rows render locked ("??? — undiscovered", no distance/buttons);
+                            //   D-012: real attribute chips (difficulty/surface/mileage), elevation, amenities
+    AccessBanner.tsx        // current zone status (public/caution/restricted) + D-012 verbatim ownerLabel
+                            //   subline (e.g. "Arches National Park — NPS"; named WSA on caution) w/ source tag
     PosterboardDialog.tsx   // completion guestbook: seeded messages + add-yours (session-only, "demo — not saved")
   lib/geo.test.ts           // ~8–12 cases: distance, inside/outside geofence, zone classification,
                             //   discovery threshold (withinDiscovery vs withinGeofence are independent)
@@ -138,12 +163,16 @@ src/
                             //   eval (caution forfeits it), badge awarding, computeTotals max=1000
   components/App.test.tsx   // smoke render (mock react-leaflet) — app mounts, briefing visible
 scripts/
-  fetch-moab-data.mjs       // authoring-time: pull OSM/BLM/UGRC → clip to bbox → simplify → write src/data/sources/*
+  fetch-moab-data.mjs       // authoring-time: pull OSM/BLM/UGRC (keep outFields=* for owner/difficulty
+                            //   attrs) → clip to bbox → simplify → write src/data/sources/*; D-012: fetch
+                            //   USGS 3DEP elevation per checkpoint + sampled route, snap route to OSM trail
+                            //   geometry (turf nearestPointOnLine + lineSlice), fetch named OSM features
 docs/
   plans/IMPLEMENTATION-PLAN.md  // this plan, committed to the repo
   AI_USAGE.md                   // NEW: briefing/copy generation prompts + how AI was used
   WORKLOG.md                    // NEW: running work/chat log
-  DATA-SOURCES.md               // NEW: per-dataset attribution (OSM ODbL · UGRC CC BY 4.0 · BLM public domain · Esri)
+  DATA-SOURCES.md               // NEW: per-dataset attribution (OSM ODbL · UGRC CC BY 4.0 · BLM public
+                                //   domain · Esri imagery/hillshade · USGS 3DEP elevation public domain)
   ARCHITECTURE.md               // NEW (nice-to-have): short overview + one Mermaid loop diagram
   research/moab-data-sources.md // EXISTS: verified endpoints + D-011 grounding decision
   (update CHANGELOG.md + DECISIONS.md — resolve D-00x open questions; add D-011 amending D-002/D-004)
@@ -151,12 +180,15 @@ docs/
 
 ## Core loop & logic
 
-1. App loads the single quest; `MapView` renders zones, checkpoints (marker + geofence circle), and a
-   draggable "you" marker.
+1. App loads the single quest; `MapView` renders zones, the **on-trail quest route** (D-012, from
+   `route.geojson` — follows real singletrack), checkpoints (marker + geofence circle), and a
+   draggable "you" marker. `ScoreCard` shows the route summary (`mi · +ft`) + elevation sparkline.
 2. Reviewer **clicks the map or drags** the marker → reducer updates user position.
 3. On every move, `lib/geo.ts` recomputes per checkpoint **distance**, **withinDiscovery**, and
    **withinGeofence**, plus the **current access zone** (point-in-polygon). `AccessBanner` reflects the
-   zone. Any undiscovered checkpoint now `withinDiscovery` is **latched discovered** by the reducer —
+   zone **and its verbatim `ownerLabel`** (D-012: "Arches National Park — NPS"; named WSA on caution);
+   the **coordinate HUD** updates with the user's real lat/lng + UTM. Any undiscovered checkpoint now
+   `withinDiscovery` is **latched discovered** by the reducer —
    its `?` pin resolves into the named marker + geofence (reveal flourish + `Discovered: <name>` toast),
    and its `CheckpointPanel` row unlocks. Discovery never reverses and never auto-checks-in.
 4. **Check-in** is enabled only when **discovered and** inside a checkpoint geofence:
@@ -185,27 +217,42 @@ behind prose).
 1. **Scaffold + UI kit**: Vite+React+TS, add Tailwind v4 (`@tailwindcss/vite`) + shadcn init, install
    leaflet/react-leaflet/turf; render an Esri-satellite Leaflet map at Moab; set dark/orange theme tokens. *(~20 min)*
 2. **Source + ground real data** (`scripts/fetch-moab-data.mjs`): pull OSM hero trails + BLM/UGRC land
-   ownership + trailheads, clip to the Moab bbox, simplify, reclassify ownership → access tiers; commit
-   `data/sources/*.geojson` + `docs/DATA-SOURCES.md`. Pick final checkpoints from the real geometry,
-   sanity-checking each against the satellite imagery. *(~20 min)*
+   ownership + trailheads (keep `outFields=*` for owner/difficulty attrs, **D-012**), clip to the Moab
+   bbox, simplify, reclassify ownership → access tiers; commit `data/sources/*.geojson` +
+   `docs/DATA-SOURCES.md`. Pick final checkpoints from the real geometry, sanity-checking each against
+   the satellite imagery. **D-012 authoring:** fetch USGS 3DEP elevation per checkpoint + sampled route,
+   snap the route to OSM trail geometry → `route.geojson`, fetch named OSM features →
+   `named_features.geojson`. *(~20 min + ~15 min for D-012 authoring)*
 3. **Data + types**: quest fixture (checkpoints from real trailheads with `discoveryRadius`, photo
    prompts, plus the geocache search/exact geofences), `accessZones` from the reclassified ownership,
    briefing copy (real names + geocache hint), posterboard seed messages. *(~15 min)*
-4. **`lib/geo.ts` + tests**: distance, geofence, point-in-polygon classification, `checkpointProximity`
-   (independent discovery vs geofence thresholds); Vitest green. *(~20 min)*
-5. **MapView**: zones (bold semi-transparent overlays over satellite), real trail lines, checkpoints+geofences
-   with **undiscovered `?` pin → reveal flourish** on discovery, geocache search circle (no cache marker),
-   draggable/click user marker, live distance, attribution control. *(~25 min)*
+4. **`lib/geo.ts` + tests**: distance, geofence, point-in-polygon classification (now returns
+   `{tier, ownerLabel}`, **D-012**), `checkpointProximity` (independent discovery vs geofence
+   thresholds); **D-012 pure helpers** `computeGain` / `routeTotals` / `formatLatLon` / `toUTM` + cases;
+   Vitest green. *(~20 min)*
+5. **MapView**: zones (bold semi-transparent overlays over satellite), real trail lines, **on-trail quest
+   route** (D-012), checkpoints+geofences with **undiscovered `?` pin → reveal flourish** on discovery,
+   geocache search circle (no cache marker), draggable/click user marker, live distance, **D-012 hillshade
+   toggle + coordinate HUD**, attribution control. *(~25 min)*
 6. **Scoring + state + cards**: `lib/scoring.ts` + `scoring.test.ts` (check-in/photo/geocache/clean-run/
    badges/totals); reducer (incl. **discovery latch** + Pathfinder); check-in gated by discovered+geofence
    with access gating + blocked-check-in toast/dialog; **discovery toast + locked CheckpointPanel rows**;
-   geocache find; ScoreCard (`current/max` + breakdown), photo bonus, PosterboardDialog on completion;
-   floating overlay cards via `frontend-design`. *(~30 min)*
+   geocache find; ScoreCard (`current/max` + breakdown **+ D-012 route summary/sparkline**), photo bonus,
+   PosterboardDialog on completion; **D-012 presentation: AccessBanner `ownerLabel`/WSA subline,
+   CheckpointPanel attribute+elevation+amenity chips, named-feature photo-prompt copy**; floating overlay
+   cards via `frontend-design`. *(~30 min)*
 7. **Polish + docs**: disclaimers, write `docs/AI_USAGE.md` + `docs/WORKLOG.md`
    + `docs/ARCHITECTURE.md`, smoke test, update `CHANGELOG.md` + resolve `DECISIONS.md` open questions. *(~15 min)*
 
 > Real-data sourcing adds ~20 min (total ~145 min). Trim by using fewer hero trails / a tighter bbox if
 > the timebox is tight; the authoring fetch is the only added work — runtime stays static + frontend-only.
+>
+> **D-012 enhancements stack on top and are tiered by cost** so the timebox stays controllable:
+> **Tier 1 (attribute surfacing)** is nearly free — already-fetched fields → ~10 min of UI, do it inline.
+> **Tier 2 (elevation + on-trail route)** is the substantive add (~15 min authoring + ~15 min UI); if
+> squeezed, ship elevation chips + on-trail route line and drop the profile sparkline.
+> **Tier 3 (hillshade / named features / WSA label / coordinate HUD)** is independent polish — each item
+> is individually cuttable and the trim-first group. None add runtime calls or dependencies.
 
 ## Verification
 
@@ -213,7 +260,12 @@ behind prose).
   briefing/score/checkpoint cards all render.
 - **Real-data sanity:** trail lines + access polygons visibly line up with the Esri satellite imagery
   (trails follow visible tracks; the restricted zone sits on the real Arches/NPS or private boundary);
-  attribution control shows OSM/BLM/UGRC/Esri credits; no checkpoint contradicts the imagery.
+  the quest route line **follows the real trail** (not straight hops); attribution control shows
+  OSM/BLM/UGRC/Esri/USGS credits; no checkpoint contradicts the imagery.
+- **D-012 checks:** entering a zone shows the **verbatim owner string** (e.g. "Arches National Park —
+  NPS"); checkpoints show real difficulty/surface/mileage + elevation chips; ScoreCard shows route
+  `mi · +ft`; the **hillshade toggle** fades terrain in/out; the coordinate HUD tracks the user marker;
+  a scenic photo prompt names a real OSM feature.
 - **Manual loop**: checkpoints start as faint `?` pins / locked panel rows. Drag/click toward one → on
   crossing its **discoveryRadius** it resolves (flourish + `Discovered:` toast, row unlocks) — check-in
   stays disabled until you also enter the tighter geofence. Continue into the geofence → distance hits 0,

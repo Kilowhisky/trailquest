@@ -54,6 +54,11 @@ Static data allows the project to demonstrate the product concept and geospatial
 
 The first version will not prove data ingestion or production integration. It will clearly label all data as fictional/demo data.
 
+**Amended 2026-06-12 (D-011, D-013):** the *static / committed-at-authoring-time* premise holds, but
+*fictional geometry* is reversed. Trail and land **geometry is now real** (OSM / BLM / UGRC), fetched
+once at authoring time and committed static — the app still makes no runtime calls. Only the **game
+layer** (quest storyline, point values, badges, access **tiers**) is mocked.
+
 ---
 
 ## D-003: Use simulated location instead of browser GPS
@@ -97,6 +102,12 @@ Access-awareness makes the idea feel more native to onX and demonstrates point-i
 ### Consequences
 
 All access data must be fictional. The UI and docs must explicitly avoid legal/access claims.
+
+**Amended 2026-06-12 (D-011, D-013):** access *polygons* are no longer fictional — they are **real
+land-ownership boundaries** (BLM / UGRC / NPS) reclassified into `public` / `caution` / `restricted`
+tiers. Point-in-polygon now runs on real boundaries; the **tier mapping** is the game. Legal /
+authoritative access assertions and real-time closures remain out of scope, surfaced with a clear
+"not legal, navigational, or land-access guidance" disclaimer.
 
 ---
 
@@ -305,19 +316,147 @@ inventory forced each of these into the open.
 
 ---
 
+## D-012: Deepen real-data authenticity — surface attributes, add elevation + on-trail distance, terrain/feature polish
+
+**Date:** 2026-06-12
+
+### Decision
+
+Extend the real-data grounding (D-011) with three tiers of enhancement, each frontend-only,
+authoring-time-sourced, and committed static — never any new runtime call. Detail lives in three specs:
+
+1. **Real attribute surfacing**
+   ([spec](specs/2026-06-12-real-attribute-surfacing-design.md)) — render the **verbatim** land-owner
+   string on the access banner, plus checkpoint difficulty/surface/mileage and trailhead amenities, all
+   from fields already fetched (`outFields=*`). `classifyAccess` returns `{ tier, ownerLabel }`.
+2. **Elevation & on-trail distance**
+   ([spec](specs/2026-06-12-elevation-and-on-trail-distance-design.md)) — real per-checkpoint elevation
+   and route profile/total climb from **USGS 3DEP** (public domain, keyless), and a quest route **snapped
+   to OSM trail geometry** so the drawn path follows real singletrack and route mileage is on-trail.
+   Live "distance to target" stays honest great-circle; the two distances are labeled distinctly.
+3. **Terrain & named-feature polish**
+   ([spec](specs/2026-06-12-terrain-and-named-feature-polish-design.md)) — keyless **Esri World
+   Hillshade** toggle, photo prompts anchored to real OSM features, a **named WSA** caution label, and a
+   live lat/lng + UTM coordinate readout.
+
+### Context
+
+After committing to real geometry (D-011), the question was how much further authenticity could go
+without breaking the frontend-only / no-CORS / timeboxed shape. The fetched layers carried rich
+attribute tables the plan was discarding, the prototype had no third (elevation) dimension, and routes
+were straight hops rather than real trail. Two new endpoints were **live-verified over Moab**: USGS
+3DEP EPQS elevation and Esri World Hillshade tiles; named features reuse the already-verified OSM
+Overpass host.
+
+### Rationale
+
+- Authenticity-per-minute: Tier 1 is nearly free (already-fetched fields → UI), Tier 2 is the
+  substantive new data dimension, Tier 3 is independent, cuttable polish.
+- It tightens D-011's promise — a verbatim owner string and a route tracing real singletrack can't drift
+  from what a local knows or the imagery shows.
+- All three keep the spatial logic pure and testable (`computeGain`, `routeTotals`, `formatLatLon`,
+  `toUTM`, extended `classifyAccess`) and add no scoring (no movement-model tell under teleport sim).
+
+### Consequences
+
+- Authoring (`scripts/fetch-moab-data.mjs`) gains an elevation fetch, route-snapping, and a named-feature
+  fetch; commits `route.geojson` + `named_features.geojson`. Attribution adds USGS 3DEP (public domain)
+  and Esri hillshade.
+- `lib/geo.ts`, `types/quest.ts`, `MapView`, `AccessBanner`, `CheckpointPanel`, and `ScoreCard` gain the
+  presentation surfaces above. No backend, no dependencies beyond the existing `@turf/*`, no runtime calls.
+- Tiering is explicit so the timebox stays controllable; Tier 3 is the trim-first group.
+
+---
+
+## D-013: Consolidation — record the real-data reversal, resolve the scoring/restricted contradiction, pin remaining semantics
+
+**Date:** 2026-06-12
+
+### Decision
+
+A consolidation pass (full repo review) to make the corpus internally consistent before implementation,
+with the build scope confirmed as the **full corpus** (D-010 + D-011 + D-012 all three tiers + fog-of-war):
+
+1. **Record the real-data reversal on its source decisions.**
+   [D-002](#d-002-use-static-fixture-data-first) and
+   [D-004](#d-004-include-access-awareness-as-a-first-class-concept) are amended in place to point at D-011:
+   geometry is **real** and committed static; only the game layer is mocked.
+
+2. **Resolve the perfect-run contradiction — no *scored* checkpoint in a restricted zone.** All **5 scored
+   checkpoints** sit only in `public` / `caution` zones, so a perfect run = **1000** and the **Quest
+   Complete** badge (all 5 checked in) are both achievable. The restricted-block mechanic is demonstrated
+   by a **6th, unscored "forbidden" waypoint** placed just inside the restricted (NPS / Arches) line — a
+   tempting scenic overlook whose check-in is **always blocked** (do-not-enter message). It awards the
+   **Access Aware** badge, **no points**, and does **not** count toward Quest Complete. This keeps a live
+   blocked-check-in UX while preserving `max = 1000`.
+
+3. **Pin "Access Aware" semantics.** It fires the first time the app surfaces an access warning the user
+   acknowledges: a **blocked restricted** check-in attempt **or** a **caution-zone** check-in. This
+   supersedes the looser "heeded" wording in [scoring-design.md](specs/scoring-design.md).
+
+4. **Canonical badge set = 8:** Trailhead, Access Aware, Shutterbug, Cache Hunter, Clean Run, **Pathfinder**
+   (fog-of-war), Left Your Mark, Quest Complete. **Pathfinder = all 5 *scored* checkpoints discovered**; the
+   forbidden waypoint is shown from the start as a "restricted — do not enter" marker, not a discovery
+   target. The scoring spec's 7-badge table is updated to add Pathfinder.
+
+5. **Resolve the stale "Open questions."** Questions 1, 2, 3, 5, 6 are answered by the implementation plan
+   and struck through below; the doc index, `CHANGELOG.md`, `docs/CHAT-LOG.md`, and `docs/MEMORY.md` are
+   synced to the current corpus.
+
+6. **Doc-naming note.** `docs/DATA-SOURCES.md` (per-dataset **data** attribution, created at implementation)
+   is distinct from `docs/ATTRIBUTION.md` (AI **commit-message** convention). Both are kept and
+   cross-referenced so the similar names don't confuse a reviewer.
+
+### Context
+
+Three decision waves — D-010 (scoring), D-011 (real-data reversal), D-012 (authenticity) — were layered onto
+an original "fictional data only" framing. The base context docs (README, CONTEXT, DOMAIN-CONTEXT, MEMORY)
+still described the superseded mock-only world; the open-questions list was stale (5 of 6 answered); and the
+scoring spec and implementation plan disagreed on whether a checkpoint sits in a restricted zone — which made
+the headline "perfect run = 1000" and the "Quest Complete" badge unreachable. A full review surfaced these.
+
+### Rationale
+
+- A future agent reads `MEMORY.md` / `README.md` first; leaving them on the old premise is the highest-risk
+  drift in the repo.
+- "No scored checkpoint in restricted" is the only resolution that keeps **both** the 1000-point headline and
+  a **live** restricted-block demo; the unscored forbidden waypoint turns the access lesson into a concrete,
+  onX-flavored moment without touching the point model.
+- Pinning Access Aware and the badge set removes the remaining contradictions between the scoring spec, the
+  testing plan, and the fog-of-war spec.
+
+### Consequences
+
+- `types/quest.ts` gains an unscored/forbidden waypoint flag; the quest fixture adds the 6th waypoint;
+  `MapView` / `CheckpointPanel` render it distinctly; the reducer's restricted-block path (already in the
+  testing plan) gains a live trigger. The point model and `max = 1000` are unchanged.
+- [scoring-design.md](specs/scoring-design.md) and [testing-plan.md](specs/testing-plan.md) are updated for
+  the Pathfinder badge, the Access Aware wording, and the restricted-reachability resolution.
+- This is the last planning decision before the executable implementation plan; no app code is written in
+  the consolidation pass itself.
+
+---
+
 ## Open questions
 
-These are intentionally unresolved for the implementation agent to consider:
+Resolved during consolidation (D-013). Kept here as a record of how each was answered:
 
-1. Should the first map use Leaflet or MapLibre?
-2. Should the quest fixture be TypeScript objects or GeoJSON?
-3. Should the UI be a single-page app with one quest or support multiple quests?
+1. ~~Should the first map use Leaflet or MapLibre?~~ **Resolved:** Leaflet via `react-leaflet@4`
+   (implementation plan).
+2. ~~Should the quest fixture be TypeScript objects or GeoJSON?~~ **Resolved:** typed TS objects whose
+   geometry is GeoJSON-compatible (`[lng,lat]`); real source layers are committed GeoJSON.
+3. ~~Should the UI be a single-page app with one quest or support multiple quests?~~ **Resolved:** one rich
+   single quest, ~5 checkpoints.
 4. ~~Should tests be included immediately or after the first demo loop works?~~ **Resolved by
    [D-011](#d-011-pin-testing-strategy-and-the-spatialscoring-semantics-it-depends-on): written
    alongside each module.**
-5. Should the app include a generated briefing as static text or a mock AI generation panel?
-6. Should Mermaid diagrams live in a future `ARCHITECTURE.md` file or be added during implementation?
+5. ~~Should the app include a generated briefing as static text or a mock AI generation panel?~~ **Resolved:**
+   Claude-pre-generated copy committed as static fixtures, rendered in `BriefingCard`; AI authoring is
+   documented in `docs/AI_USAGE.md`.
+6. ~~Should Mermaid diagrams live in a future `ARCHITECTURE.md` file or be added during implementation?~~
+   **Resolved:** a short `docs/ARCHITECTURE.md` with one Mermaid loop diagram, added during implementation.
 
 ## Current next decision
 
-The next agent should decide the implementation scaffold and create a minimal demoable app.
+Consolidation is complete (D-013). The next step is to turn the authoritative implementation plan into an
+executable task breakdown (via the writing-plans skill), then scaffold the app.
