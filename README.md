@@ -67,9 +67,22 @@ docs/
   DOMAIN-CONTEXT.md
   GENESIS.md
   DECISIONS.md
+  MEMORY.md
+  CHAT-LOG.md
 ```
 
 Implementation is the next step.
+
+## Agent handoff protocol
+
+AI agents working in this repo should keep durable working state in `docs/`:
+
+- `docs/MEMORY.md` — persistent agent memory, current state, constraints, and next best action.
+- `docs/CHAT-LOG.md` — chronological summaries of meaningful AI-agent sessions.
+- `docs/DECISIONS.md` — product and architecture decisions.
+- `CHANGELOG.md` — repository-level changes.
+
+Before making significant implementation changes, an agent should read `README.md` and all files in `docs/`. After meaningful work, the agent should update `docs/MEMORY.md`, append a session note to `docs/CHAT-LOG.md`, and update `CHANGELOG.md` / `docs/DECISIONS.md` when appropriate.
 
 ## Recommended implementation direction
 
@@ -117,7 +130,7 @@ Do not build these in the first pass:
 ## Suggested next command for Claude Code
 
 ```text
-Read README.md and all files in docs/. Then propose a minimal 1–2 hour implementation plan for TrailQuest. After the plan, scaffold the app and implement the smallest demoable version of the geospatial quest loop.
+Read README.md and all files in docs/. Pay special attention to docs/MEMORY.md and docs/CHAT-LOG.md. Then propose a minimal 1–2 hour implementation plan for TrailQuest. After the plan, scaffold the app and implement the smallest demoable version of the geospatial quest loop. When finished, update docs/MEMORY.md, append a session summary to docs/CHAT-LOG.md, and update CHANGELOG.md.
 ```
 
 ## Source notes
