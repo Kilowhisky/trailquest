@@ -4,6 +4,15 @@ All notable changes to TrailQuest will be documented in this file.
 
 This project uses a lightweight changelog format because the take-home emphasizes process clarity over release ceremony.
 
+## 0.0.1 - 2026-06-12
+
+### Added
+
+- Added `docs/MEMORY.md` as persistent agent memory for Claude Code / future AI sessions.
+- Added `docs/CHAT-LOG.md` as a chronological log for meaningful AI-agent sessions.
+- Updated `README.md` with the agent handoff protocol.
+- Updated `docs/DECISIONS.md` with the decision to keep agent memory and chat logs in `docs/`.
+
 ## 0.0.0 - 2026-06-12
 
 ### Added
