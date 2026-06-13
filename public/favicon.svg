@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <rect width="32" height="32" rx="7" fill="#2a2420" />
+  <!-- red-rock ridgeline -->
+  <path d="M3 23 L11 12 L16 18 L21 9 L29 23 Z" fill="#f97316" />
+  <!-- quest flag -->
+  <rect x="20.2" y="6" width="1.5" height="12" fill="#fde68a" />
+  <path d="M21.7 6.5 L27 8.5 L21.7 10.5 Z" fill="#fde68a" />
+</svg>

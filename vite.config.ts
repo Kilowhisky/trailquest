@@ -15,6 +15,12 @@ export default defineConfig(({ command }) => ({
       '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
   },
+  build: {
+    // The committed real GeoJSON (trails/ownership/route) is inlined into the bundle
+    // so the app stays frontend-only with no runtime fetches; ~240 KB gzipped total is
+    // fine for a static demo. Raise the warning threshold to reflect that trade-off.
+    chunkSizeWarningLimit: 1200,
+  },
   test: {
     environment: 'jsdom',
     globals: true,

@@ -1,15 +1,11 @@
-import type { ReactNode } from 'react'
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import App from './App'
 
-// react-leaflet renders a real Leaflet map that needs a sized DOM canvas;
+// MapView wraps a real Leaflet map that needs a sized DOM canvas + tile network;
 // stub it so the smoke test exercises App composition, not the map engine.
-vi.mock('react-leaflet', () => ({
-  MapContainer: ({ children }: { children?: ReactNode }) => (
-    <div data-testid="map">{children}</div>
-  ),
-  TileLayer: () => null,
+vi.mock('./components/MapView', () => ({
+  MapView: () => <div data-testid="map" />,
 }))
 
 describe('App', () => {

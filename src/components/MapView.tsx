@@ -1,33 +1,114 @@
-import { MapContainer, TileLayer } from 'react-leaflet'
+import { Fragment } from 'react'
+import { Circle, GeoJSON, MapContainer, Marker, Polyline, TileLayer, useMapEvents } from 'react-leaflet'
+import type { Feature, GeoJsonProperties, Geometry } from 'geojson'
+import L, { type PathOptions } from 'leaflet'
 import 'leaflet/dist/leaflet.css'
+import type { LngLat } from '../types/quest'
+import { quest, scoredCheckpoints } from '../data/quest'
+import { accessZonesFC } from '../data/accessZones'
+import trailsRaw from '../data/sources/moab_trails.geojson?raw'
+import { checkpointIcon, forbiddenIcon, toLatLng, undiscoveredIcon, userIcon } from '../lib/mapIcons'
 
-/**
- * Klondike Bluffs / Bar M (Moab Brands) — real BLM singletrack running up against
- * the Arches National Park boundary. Final center/bbox and checkpoints are chosen
- * from fetched GeoJSON in step 2; this is the demo viewport.
- */
-const MOAB_CENTER: [number, number] = [38.715, -109.708]
-const DEFAULT_ZOOM = 13
+const trailsFC = JSON.parse(trailsRaw)
 
-// Keyless Esri World Imagery (satellite) — attribution required.
-const ESRI_WORLD_IMAGERY =
-  'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
+// Keyless Esri tiles (attribution required). Imagery leads; hillshade is an opt-in overlay.
+const ESRI_IMAGERY =
+  'https://services.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
+const ESRI_HILLSHADE =
+  'https://services.arcgisonline.com/arcgis/rest/services/Elevation/World_Hillshade/MapServer/tile/{z}/{y}/{x}'
 const ESRI_ATTRIBUTION =
-  'Tiles &copy; Esri &mdash; Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community'
+  'Trails &copy; OpenStreetMap (ODbL) &middot; Land &copy; UGRC / BLM &middot; Elevation &copy; USGS 3DEP &middot; Imagery &copy; Esri, Maxar, Earthstar Geographics'
 
-export function MapView() {
+const TIER_COLOR: Record<string, string> = {
+  public: '#22c55e',
+  caution: '#eab308',
+  restricted: '#ef4444',
+}
+
+function zoneStyle(feature?: Feature<Geometry, GeoJsonProperties>): PathOptions {
+  const tier = String(feature?.properties?.tier ?? 'public')
+  const color = TIER_COLOR[tier] ?? '#22c55e'
+  return { color, weight: 1, fillColor: color, fillOpacity: tier === 'restricted' ? 0.22 : 0.14 }
+}
+
+const TRAIL_STYLE: PathOptions = { color: '#fde68a', weight: 1.2, opacity: 0.5 }
+const ROUTE_STYLE: PathOptions = { color: '#f97316', weight: 4, opacity: 0.95, dashArray: '1 9', lineCap: 'round' }
+const GEOFENCE_STYLE: PathOptions = { color: '#f97316', weight: 1.5, fillColor: '#f97316', fillOpacity: 0.1 }
+const FORBIDDEN_FENCE: PathOptions = { color: '#ef4444', weight: 1, dashArray: '3 4', fillColor: '#ef4444', fillOpacity: 0.06 }
+const GEOCACHE_STYLE: PathOptions = { color: '#c084fc', weight: 1.5, dashArray: '4 6', fillColor: '#a855f7', fillOpacity: 0.08 }
+
+const scoredOrder = new Map(scoredCheckpoints.map((c, i) => [c.id, i + 1]))
+
+function ClickToMove({ onMoveUser }: { onMoveUser: (p: LngLat) => void }) {
+  useMapEvents({
+    click(e) {
+      onMoveUser([e.latlng.lng, e.latlng.lat])
+    },
+  })
+  return null
+}
+
+export interface MapViewProps {
+  userPosition: LngLat
+  discoveredIds: ReadonlySet<string>
+  onMoveUser: (p: LngLat) => void
+  showHillshade?: boolean
+}
+
+export function MapView({ userPosition, discoveredIds, onMoveUser, showHillshade }: MapViewProps) {
+  const routeLatLngs = quest.route.geometry.coordinates.map((c) => toLatLng(c as LngLat))
+
   return (
-    <MapContainer
-      center={MOAB_CENTER}
-      zoom={DEFAULT_ZOOM}
-      className="h-full w-full"
-      zoomControl={false}
-    >
-      <TileLayer
-        url={ESRI_WORLD_IMAGERY}
-        attribution={ESRI_ATTRIBUTION}
-        maxZoom={19}
+    <MapContainer center={toLatLng(quest.center)} zoom={quest.zoom} className="h-full w-full" zoomControl={false}>
+      <TileLayer url={ESRI_IMAGERY} attribution={ESRI_ATTRIBUTION} maxZoom={19} />
+      {showHillshade && <TileLayer url={ESRI_HILLSHADE} opacity={0.45} maxZoom={19} />}
+
+      {/* Real land-ownership polygons, colored by game access tier (point-in-polygon runs on these). */}
+      <GeoJSON data={accessZonesFC} style={zoneStyle} interactive={false} />
+      {/* Real OSM trail network. */}
+      <GeoJSON data={trailsFC} style={() => TRAIL_STYLE} interactive={false} />
+      {/* On-trail quest route. */}
+      <Polyline positions={routeLatLngs} pathOptions={ROUTE_STYLE} />
+
+      {/* Hidden geocache — fuzzy search circle only (no cache marker). */}
+      <Circle center={toLatLng(quest.geocache.searchCenter)} radius={quest.geocache.searchRadiusM} pathOptions={GEOCACHE_STYLE} />
+
+      {quest.checkpoints.map((c) => {
+        if (c.forbidden) {
+          return (
+            <Fragment key={c.id}>
+              <Circle center={toLatLng(c.position)} radius={c.radius} pathOptions={FORBIDDEN_FENCE} />
+              <Marker position={toLatLng(c.position)} icon={forbiddenIcon()} title={`${c.name} — restricted (NPS)`} />
+            </Fragment>
+          )
+        }
+        if (!discoveredIds.has(c.id)) {
+          return <Marker key={c.id} position={toLatLng(c.position)} icon={undiscoveredIcon()} title="Undiscovered" />
+        }
+        return (
+          <Fragment key={c.id}>
+            <Circle center={toLatLng(c.position)} radius={c.radius} pathOptions={GEOFENCE_STYLE} />
+            <Marker
+              position={toLatLng(c.position)}
+              icon={checkpointIcon(scoredOrder.get(c.id) ?? 0, c.photoPrompt != null)}
+              title={c.name}
+            />
+          </Fragment>
+        )
+      })}
+
+      <Marker
+        position={toLatLng(userPosition)}
+        icon={userIcon()}
+        draggable
+        eventHandlers={{
+          dragend(e) {
+            const ll = (e.target as L.Marker).getLatLng()
+            onMoveUser([ll.lng, ll.lat])
+          },
+        }}
       />
+      <ClickToMove onMoveUser={onMoveUser} />
     </MapContainer>
   )
 }
