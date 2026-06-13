@@ -123,13 +123,17 @@ export function questReducer(state: ReducerState, action: Action): ReducerState 
       // Scored checkpoint: must be discovered and inside the geofence.
       if (!state.discovered.has(cp.id) || !prox.withinGeofence) return state
       const { state: afterCheckIn, delta } = applyCheckIn(state, cp, state.currentZone.tier)
-      if (delta === 0) return state // already checked in
 
+      // Completion is derived from "all scored checked in", independent of whether THIS
+      // action scored (delta), so a resumed/duplicate 5th check-in still completes. A
+      // duplicate that is not completing stays an idempotent no-op.
       let next: ReducerState = { ...state, ...afterCheckIn }
-      let noticeSeq = state.noticeSeq + 1
-      let notice: Notice = { id: noticeSeq, kind: 'checkin', message: `+${delta} ${cp.name}`, delta }
-
-      // Completion: evaluate Clean Run and open the posterboard.
+      let noticeSeq = state.noticeSeq
+      let notice: Notice | null = state.notice
+      if (delta > 0) {
+        noticeSeq += 1
+        notice = { id: noticeSeq, kind: 'checkin', message: `+${delta} ${cp.name}`, delta }
+      }
       if (!next.completed && allScoredCheckedIn(next)) {
         const { state: afterClean, delta: cleanDelta } = evaluateCleanRun(next)
         next = { ...next, ...afterClean, completed: true, posterboardOpen: true }
@@ -140,6 +144,8 @@ export function questReducer(state: ReducerState, action: Action): ReducerState 
           message: cleanDelta > 0 ? `Quest Complete! Clean Run +${cleanDelta}` : 'Quest Complete!',
           delta: cleanDelta || undefined,
         }
+      } else if (delta === 0) {
+        return state // pure duplicate check-in — no-op
       }
       return { ...next, notice, noticeSeq }
     }

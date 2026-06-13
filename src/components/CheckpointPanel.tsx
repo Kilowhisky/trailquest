@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import type { Checkpoint, LngLat } from '../types/quest'
 import { quest, scoredCheckpoints } from '../data/quest'
 import { checkpointProximity } from '../lib/geo'
@@ -5,7 +6,7 @@ import type { ReducerState } from '../state/questReducer'
 
 const scoredOrder = new Map(scoredCheckpoints.map((c, i) => [c.id, i + 1]))
 
-function Chip({ children, title }: { children: React.ReactNode; title?: string }) {
+function Chip({ children, title }: { children: ReactNode; title?: string }) {
   return (
     <span title={title} className="rounded bg-muted/60 px-1.5 py-0.5 text-[10px] text-muted-foreground">
       {children}

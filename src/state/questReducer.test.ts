@@ -92,6 +92,23 @@ describe('questReducer', () => {
     expect(s.completed).toBe(true)
   })
 
+  it('completes from a fully-checked-in state even if the 5th check-in is a duplicate (resume safety)', () => {
+    // All 5 already in checkedIn but completed still false (e.g. a restored state). Re-dispatching
+    // CHECK_IN for one must still derive completion + Clean Run, not early-return on delta===0.
+    const fifth = scoredCheckpoints[4]
+    const start = {
+      ...initialQuestState,
+      discovered: new Set(scoredCheckpoints.map((c) => c.id)),
+      checkedIn: new Set(scoredCheckpoints.map((c) => c.id)),
+      userPosition: fifth.position,
+      currentZone: { tier: 'public' as const, ownerLabel: 'BLM' },
+    }
+    const s = questReducer(start, { type: 'CHECK_IN', checkpointId: fifth.id })
+    expect(s.completed).toBe(true)
+    expect(s.posterboardOpen).toBe(true)
+    expect(awardBadges(s, quest).has('clean-run')).toBe(true)
+  })
+
   it('records a posterboard message and earns Left Your Mark', () => {
     const s = questReducer(initialQuestState, { type: 'POST_MESSAGE', author: 'Tester', text: 'Made it!' })
     expect(s.posted).toBe(true)

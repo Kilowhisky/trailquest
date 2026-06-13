@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, type FormEvent } from 'react'
 import type { PosterMessage } from '../types/quest'
 import { computeTotals, type QuestState } from '../lib/scoring'
 import { quest } from '../data/quest'
@@ -19,7 +19,7 @@ export function PosterboardDialog({ open, state, messages, posted, onPost, onClo
 
   const totals = computeTotals(state, quest)
 
-  function submit(e: React.FormEvent) {
+  function submit(e: FormEvent) {
     e.preventDefault()
     if (!text.trim()) return
     onPost(author, text)
@@ -28,11 +28,23 @@ export function PosterboardDialog({ open, state, messages, posted, onPost, onClo
 
   return (
     <div className="pointer-events-auto absolute inset-0 z-[2000] grid place-items-center bg-black/60 p-4 backdrop-blur-sm">
-      <div className="flex max-h-[80vh] w-full max-w-md flex-col rounded-2xl border border-border bg-card shadow-2xl">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="posterboard-title"
+        className="flex max-h-[80vh] w-full max-w-md flex-col rounded-2xl border border-border bg-card shadow-2xl"
+      >
         <div className="border-b border-border px-5 py-4">
           <div className="flex items-center gap-2">
-            <h2 className="text-lg font-bold text-card-foreground">Quest Complete 🎉</h2>
-            <button type="button" onClick={onClose} className="ml-auto text-sm text-muted-foreground hover:text-card-foreground">
+            <h2 id="posterboard-title" className="text-lg font-bold text-card-foreground">
+              Quest Complete 🎉
+            </h2>
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="Close posterboard"
+              className="ml-auto text-sm text-muted-foreground hover:text-card-foreground"
+            >
               ✕
             </button>
           </div>
