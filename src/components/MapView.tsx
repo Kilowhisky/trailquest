@@ -1,6 +1,6 @@
 import { Fragment } from 'react'
 import { Circle, GeoJSON, MapContainer, Marker, Polyline, TileLayer, useMapEvents } from 'react-leaflet'
-import type { Feature, GeoJsonProperties, Geometry } from 'geojson'
+import type { Feature, FeatureCollection, GeoJsonProperties, Geometry } from 'geojson'
 import L, { type PathOptions } from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import type { LngLat } from '../types/quest'
@@ -9,7 +9,10 @@ import { accessZonesFC } from '../data/accessZones'
 import trailsRaw from '../data/sources/moab_trails.geojson?raw'
 import { checkpointIcon, forbiddenIcon, toLatLng, undiscoveredIcon, userIcon } from '../lib/mapIcons'
 
-const trailsFC = JSON.parse(trailsRaw)
+const trailsFC = JSON.parse(trailsRaw) as FeatureCollection<Geometry>
+
+// Derived once from the static quest route — hoisted so it isn't remapped on every render.
+const ROUTE_LATLNGS = quest.route.geometry.coordinates.map((c) => toLatLng(c as LngLat))
 
 // Keyless Esri tiles (attribution required). Imagery leads; hillshade is an opt-in overlay.
 const ESRI_IMAGERY =
@@ -56,8 +59,6 @@ export interface MapViewProps {
 }
 
 export function MapView({ userPosition, discoveredIds, onMoveUser, showHillshade }: MapViewProps) {
-  const routeLatLngs = quest.route.geometry.coordinates.map((c) => toLatLng(c as LngLat))
-
   return (
     <MapContainer center={toLatLng(quest.center)} zoom={quest.zoom} className="h-full w-full" zoomControl={false}>
       <TileLayer url={ESRI_IMAGERY} attribution={ESRI_ATTRIBUTION} maxZoom={19} />
@@ -68,7 +69,7 @@ export function MapView({ userPosition, discoveredIds, onMoveUser, showHillshade
       {/* Real OSM trail network. */}
       <GeoJSON data={trailsFC} style={() => TRAIL_STYLE} interactive={false} />
       {/* On-trail quest route. */}
-      <Polyline positions={routeLatLngs} pathOptions={ROUTE_STYLE} />
+      <Polyline positions={ROUTE_LATLNGS} pathOptions={ROUTE_STYLE} />
 
       {/* Hidden geocache — fuzzy search circle only (no cache marker). */}
       <Circle center={toLatLng(quest.geocache.searchCenter)} radius={quest.geocache.searchRadiusM} pathOptions={GEOCACHE_STYLE} />
