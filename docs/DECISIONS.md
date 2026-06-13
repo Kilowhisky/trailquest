@@ -500,10 +500,11 @@ Resolved during consolidation (D-013). Kept here as a record of how each was ans
 6. ~~Should Mermaid diagrams live in a future `ARCHITECTURE.md` file or be added during implementation?~~
    **Resolved:** a short `docs/ARCHITECTURE.md` with one Mermaid loop diagram, added during implementation.
 
-## Current next decision
+## Status: shipped (2026-06-13)
 
-Consolidation is complete (D-013 + D-014); the implementation is fully specced and internally consistent.
-The next actions are **outward-facing and need explicit user go-ahead**: make the repo public, push `main`,
-stand up CI / Pages / Copilot per [the CI/CD spec](specs/2026-06-12-cicd-pipeline-design.md) (D-014), and run
-the 7-step autonomous build train (or scaffold manually). Optionally, produce a granular task breakdown via
-the writing-plans skill first.
+Consolidation (D-013 + D-014) is complete and **the app has shipped.** It was built via the 7-step
+autonomous PR train — each step CI-gated, Copilot-reviewed, squash-merged, and auto-deployed — and is **live
+at <https://kilowhisky.github.io/trailquest/>** (61 tests passing; a perfect run scores 1000 with all 8
+badges). The repo is public; CI (`.github/workflows/ci.yml`) and the Pages deploy (`deploy.yml`) are in
+place. No open build decisions remain; any further work is optional enhancement — see
+[`docs/MEMORY.md`](MEMORY.md) → *Next best action*, and [`docs/WORKLOG.md`](WORKLOG.md) for the PR-by-PR log.

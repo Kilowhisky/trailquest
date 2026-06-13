@@ -14,18 +14,58 @@ mountain-bike singletrack runs right up against the **Arches National Park** bou
 public-land → restricted-park edge that drives the access mechanic. Open the
 [live demo](https://kilowhisky.github.io/trailquest/) to play it.
 
-## The quest loop
+## How to play the demo
 
-1. **Explore.** Five checkpoints start hidden as faint `?` pins (fog-of-war). Drag the blue marker or
-   click the map to move; crossing a checkpoint's **discovery radius** reveals it.
-2. **Check in.** Inside a checkpoint's geofence, check in for **+100**. Three scenic checkpoints offer a
-   self-attested **photo bonus (+50)**.
-3. **Stay access-aware.** The access banner reflects the **real land owner** under your feet (BLM / SITLA /
-   NPS). The 6th waypoint — the real **Tower Arch** — sits just inside Arches NP; its check-in is **blocked**
-   (earning the *Access Aware* badge) because the park is off-limits to this game.
-4. **Find the cache.** A fuzzy ~150 m search circle hides a geocache (**+250**) off-route.
-5. **Finish clean.** Complete all five checkpoints with no caution-zone check-ins for the **Clean Run +100**,
-   then sign the completion **posterboard**. A perfect run = **1000** with all **8 badges**.
+Open the [live demo](https://kilowhisky.github.io/trailquest/) — no install, no sign-in, no GPS.
+
+**Controls.** Your location is *simulated* so you can play from a desk: **drag the blue "you" marker**, or
+**click anywhere on the map** to jump there. Everything recomputes live as you move.
+
+**The screen.**
+
+- *Top-left* — the **briefing** (an AI-written quest intro; click the header to collapse it) and, below it,
+  the **score** card (current / 1000, the breakdown line, the route's elevation sparkline, and your badge chips).
+- *Top-right* — the **access banner** (your current land tier + the real owner) and the **checkpoint panel**
+  (the five scored checkpoints + the forbidden waypoint).
+- *Bottom-right* — a **hillshade** toggle and a live **coordinate readout** (lat/lng + UTM).
+
+**Walk the quest — each step, and what it means:**
+
+1. **Explore to discover (fog-of-war).** The five checkpoints start as faint `?` pins. Move toward one; when
+   you cross its (wider) **discovery radius** it resolves into a numbered checkpoint and unlocks its panel
+   row. *Why it matters: discovery is driven purely by where you've been — proximity over time — the most
+   genuinely geospatial mechanic in the app.* Discovering all five earns **Pathfinder** (no points).
+2. **Check in (+100).** Move inside a checkpoint's **geofence** (the small ring) and the panel's **Check in**
+   button enables. *A geofence is a radius around a point; check-in is gated on a point-in-circle test
+   (`distance ≤ radius`).* Earns **Trailhead** (first check-in) and **Quest Complete** (all five checked in).
+3. **Grab the photo bonus (+50).** Three scenic checkpoints show an "I got the shot" button (a mock
+   self-attest) with a prompt referencing a real nearby feature. Earns **Shutterbug**.
+4. **Stay access-aware.** As you move, the banner color tracks the **real land owner** beneath you — green
+   **BLM (public)**, yellow **SITLA (caution)**, red **NPS (restricted)** — computed by point-in-polygon over
+   real ownership boundaries, most-restrictive wins. *This is onX's land-access ethos turned into a live signal.*
+5. **Respect the boundary.** Move to **Tower Arch** (the red ⛔ marker just inside the red Arches zone) and
+   press **Try check-in** → it's **blocked** with a "do not enter" message, earning **Access Aware**. *The
+   game refuses to send you into a national park.*
+6. **Find the hidden geocache (+250).** A fuzzy purple **search circle** hides a small exact cache off-route;
+   wander inside until you trip it. Earns **Cache Hunter**.
+7. **Finish clean & sign off.** Check in at all five → **Quest Complete**. Finish with **no caution-zone
+   check-in** for the **Clean Run +100**. The completion **posterboard** opens (seeded with fictional
+   prior-quester notes); add your own (session-only, *"demo — not saved"*) to earn **Left Your Mark**.
+
+A flawless run scores **1000 / 1000** and lights all **8 badges**.
+
+### Scoring & badges
+
+| Source | Points | Badge(s) earned |
+| --- | --- | --- |
+| Discover all 5 (fog-of-war) | — | Pathfinder |
+| Checkpoint check-ins | +100 × 5 = **500** | Trailhead · Quest Complete |
+| Photo bonuses | +50 × 3 = **150** | Shutterbug |
+| Hidden geocache | **+250** | Cache Hunter |
+| Access warning heeded (caution check-in **or** blocked restricted) | — | Access Aware |
+| Clean Run (no caution check-in) | **+100** | Clean Run |
+| Posterboard | — | Left Your Mark |
+| **Perfect run** | **1000** | **all 8** |
 
 ## Real vs. mocked
 
@@ -56,30 +96,42 @@ Full provenance + licenses: [`docs/DATA-SOURCES.md`](docs/DATA-SOURCES.md).
 
 ```bash
 npm install
-npm run dev        # http://localhost:5173
-npm test           # 61 tests
-npm run build      # production build (deployed to GitHub Pages)
+npm run dev          # http://localhost:5173
+npm run test:run     # run the 61 tests once  (npm test = watch mode)
+npm run build        # production build (deployed to GitHub Pages)
 ```
 
 The real Moab data was fetched once at authoring time and committed under `src/data/sources/`. To
 re-fetch: `node scripts/fetch-moab-data.mjs` (resilient, cached, no keys required).
 
-## How this was built (the AI-assisted process)
+## How this app was built (with Claude)
 
-The take-home is judged on *a clear AI-assisted engineering process*, so the process is part of the
-deliverable:
+TrailQuest was planned, built, reviewed, and shipped with **Claude (Claude Code)** under human direction.
+Because the take-home is judged on *a clear AI-assisted engineering process*, that process is itself part of
+the deliverable:
 
-- **Brainstorm → spec → plan** for every feature before code (see `docs/specs/`, `docs/DECISIONS.md`).
-- **A serial PR train** — one PR per build step (7), each in its own git worktree, gated by **GitHub
-  Actions CI** (typecheck · lint · test · build), reviewed by **GitHub Copilot**, and squash-merged.
-- **Adversarial multi-agent verification** of the high-risk pure logic — the real-data fetch, `lib/geo.ts`,
-  and the scoring/reducer — caught real bugs before merge (e.g. a BLM MultiLineString mis-attribution and an
-  elevation-gain corruption on a dropped sample).
-- **TDD** on the pure geospatial + scoring layers; **browser QA** (Chrome DevTools) on every UI step.
-- Every merge **auto-deploys** the live demo to GitHub Pages.
+- **Brainstorm → spec → plan, before any code.** Every feature was talked through, written up as a spec, and
+  folded into one authoritative plan (`docs/specs/`, `docs/plans/`, `docs/DECISIONS.md` — decisions D-001…D-014).
+- **Built autonomously through a serial PR train.** Claude implemented the **seven build steps one pull
+  request at a time**, each in its own **git worktree** off an updated `main`, gated by **GitHub Actions CI**
+  (typecheck · lint · test · build), reviewed by **GitHub Copilot** (every comment triaged and answered),
+  then squash-merged — which **auto-deploys** the live demo to GitHub Pages.
+- **Adversarial multi-agent verification.** For the high-risk pure logic — the real-data fetch, `lib/geo.ts`,
+  and the scoring/reducer — Claude spun up fan-out workflows of independent agents that re-derived results and
+  tried to *refute* the work. They caught real bugs the happy-path tests missed: a BLM `MultiLineString`
+  mis-attribution, an elevation-gain corruption on a dropped USGS sample, UTM band/zone edge cases, and a
+  completion/delta coupling — all fixed before merge.
+- **TDD + browser QA.** The pure geospatial and scoring layers were written **test-first** (the 61 tests
+  double as documentation of the reasoning); every UI step was verified live in **Chrome DevTools**, through
+  to a perfect 1000 with all 8 badges and a clean console.
+- **Human in the loop.** Chris set product direction and scope and approved each gate — and caught a real
+  diagnostic miss (a `curl`/Windows-TLS quirk that falsely reported a data host as down), which recovered the
+  BLM attribute layer.
 
-The full story, including the AI copy-generation prompts: [`docs/AI_USAGE.md`](docs/AI_USAGE.md). The
-delivery pipeline: [`docs/CICD.md`](docs/CICD.md). The code architecture: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
+The full story, including the AI copy-generation prompts and the honest *"where AI was wrong"* moments:
+**[`docs/AI_USAGE.md`](docs/AI_USAGE.md)**. The delivery pipeline: [`docs/CICD.md`](docs/CICD.md). The code
+architecture (with a Mermaid loop diagram): [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md). The PR-by-PR log:
+[`docs/WORKLOG.md`](docs/WORKLOG.md).
 
 ## Project layout
 

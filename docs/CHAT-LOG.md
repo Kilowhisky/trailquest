@@ -185,3 +185,74 @@ plan before any app code is written.
   D-012 specs, the CI/CD spec, and a repo-analysis fold) and swept the DECISIONS.md edits into `125bef3`.
   Outward-facing CI/CD setup (make repo public, push, autonomous build loop, GitHub Pages) is recorded in
   D-014 but **gated on explicit user go-ahead** — not performed here.
+
+---
+
+## 2026-06-13 — Full implementation via the autonomous PR train (steps 1–7)
+
+**Agent/tool:** Claude Code (Opus 4.8), with GitHub Actions CI, GitHub Copilot review, Chrome DevTools
+browser QA, and multi-agent verification workflows.
+
+**Goal:**
+
+Stand up the CI/CD pipeline, then build the entire TrailQuest app end-to-end through the approved per-step
+PR train, and ship a live demo. (User: *"Spin up the full implementation. Use whatever subagents, workflows,
+or skills you need. Commit often so you can show your work."*)
+
+**Key instructions/prompts:**
+
+- One PR per build step; CI gate is the merge gate; Copilot review is advisory; squash-merge; auto-deploy.
+- Use TDD on the pure layers; use the Chrome browser to QA the UI and fix styling.
+- Real Moab geometry; mock only the game layer; never contradict the imagery/local knowledge (D-011).
+
+**Changes made:**
+
+- **Setup:** repo public, branch protection (require CI), Copilot review on every PR, GitHub Pages live demo.
+- **PR #1 — scaffold + CI/CD rails:** Vite 6 + React 18 + TS, Tailwind v4, Leaflet/Turf, `ci.yml` + `deploy.yml`.
+- **PR #2 — real data:** `scripts/fetch-moab-data.mjs` (OSM trails/features, UGRC ownership→tiers, BLM MTB
+  attrs, USGS 3DEP elevation, on-trail route via a Turf network shortest-path); committed `src/data/sources/*`.
+- **PR #3 — types + typed fixtures;** **PR #4 — `lib/geo.ts` (TDD);** **PR #5 — MapView** (all layers,
+  fog-of-war, live access, hillshade, coordinate HUD); **PR #6 — scoring + reducer + the five overlay cards;**
+  **PR #7 — polish + docs** (README, `AI_USAGE.md`, `ARCHITECTURE.md`, `CICD.md`, `WORKLOG.md`, MIT `LICENSE`).
+- **Live demo:** <https://kilowhisky.github.io/trailquest/> — verified in production to a perfect 1000 with all
+  8 badges; **61 tests** green.
+
+**Files touched:**
+
+- Entire `src/` app, `scripts/fetch-moab-data.mjs`, `.github/workflows/*`, `docs/{AI_USAGE,ARCHITECTURE,CICD,
+  WORKLOG,DATA-SOURCES}.md`, `README.md`, `CHANGELOG.md`, `LICENSE`.
+
+**Follow-ups:**
+
+- Optional enhancements only: a second quest, bundle code-splitting (data is inlined), elevation-profile
+  interactions. The build is complete.
+
+**Notes/corrections:**
+
+- **Adversarial verification workflows earned their keep** — they caught a BLM `MultiLineString`
+  mis-attribution, a `computeGain` corruption on a `null` elevation sample, `toUTM` band/zone edge bugs, and a
+  completion/delta coupling, all before merge. Copilot independently flagged several of the same issues.
+- **Honest miss:** a `curl` probe falsely reported BLM/Overpass as unreachable; Chris noticed they loaded in
+  his browser. Root cause was a Windows-`schannel` TLS-renegotiation quirk in curl — the Node fetch the script
+  uses reached every host, recovering the BLM attribute layer.
+
+---
+
+## 2026-06-13 — Docs closeout
+
+**Agent/tool:** Claude Code
+
+**Goal:** Final docs review + closeout: verify the docs are accurate, refresh `MEMORY.md`/this log, and expand
+the README with a "how to play the demo" walkthrough and a "how this app was built (with Claude)" section.
+
+**Changes made:**
+
+- `README.md` — added a detailed **How to play the demo** section (controls, the on-screen cards, a 7-step
+  walkthrough with what each step means, and a scoring/badges table) and expanded **How this app was built
+  (with Claude)**.
+- `docs/CHAT-LOG.md` (this entry), `docs/MEMORY.md` (marked the implementation complete), `docs/README.md`
+  (added the implementation-docs section to the index).
+
+**Notes/corrections:**
+
+- Doc accuracy was cross-checked against the shipped code.

@@ -4,10 +4,10 @@ TrailQuest grounds its map in **real Moab, Utah geospatial data** (decision
 [D-011](DECISIONS.md) / [D-012](DECISIONS.md)). Geometry, land ownership, elevation, and
 named features are real and sourced; **only the game layer** (quest storyline, point values,
 badges, photo prompts, the geocache objective, and the access *tier reclassification*) is
-invented. See the in-app disclaimer:
+invented. The in-app disclaimer reads (followed on screen by a "drag the marker / click to move" hint):
 
-> *Trail and land geometry are real and sourced (OSM / UGRC / BLM / USGS); the quest, scoring,
-> and access tiers are a fictional game — not legal, navigational, or land-access guidance.*
+> *Geometry, ownership & elevation are real (OSM / UGRC / BLM / USGS); the quest, scoring & access tiers are
+> a fictional game — not legal, navigational, or land-access guidance.*
 
 All data is fetched **once at authoring time** by [`scripts/fetch-moab-data.mjs`](../scripts/fetch-moab-data.mjs)
 and committed as static GeoJSON under [`src/data/sources/`](../src/data/sources/). **The app makes
@@ -59,7 +59,11 @@ reachable); the **6th, unscored "Tower Arch" waypoint** sits just inside the **N
 Arches boundary — its check-in is always blocked, demonstrating the access lesson with a real,
 locally-recognizable feature.
 
-## Combined attribution string (shown in-app)
+## Combined attribution (full credit)
+
+Expanded from the short in-app form. The app shows a condensed credit on the Leaflet map control —
+`Trails © OpenStreetMap (ODbL) · Land © UGRC / BLM · Elevation © USGS 3DEP · Imagery © Esri, Maxar,
+Earthstar Geographics` — and the full credit is:
 
 > Trail data © OpenStreetMap contributors (ODbL) · Land ownership © UGRC (CC BY 4.0) ·
 > MTB attributes © BLM (public domain) · Elevation © USGS 3DEP (public domain) ·
