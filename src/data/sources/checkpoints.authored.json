@@ -1,0 +1,184 @@
+{
+  "note": "Authored checkpoint anchors (real coords/elevation/zone/attrs). Step 3 wraps these in the typed quest fixture with the game layer (radii, prompts, points).",
+  "bbox": [
+    -109.78,
+    38.7,
+    -109.58,
+    38.84
+  ],
+  "checkpoints": [
+    {
+      "id": "cp-jurassic",
+      "name": "Jurassic Junction",
+      "lngLat": [
+        -109.72836,
+        38.78209
+      ],
+      "scored": true,
+      "photo": false,
+      "elevationFt": 4590,
+      "tier": "public",
+      "ownerLabel": "BLM",
+      "trailName": "Jurassic Trail",
+      "surface": "ground",
+      "difficulty": "MTB 2",
+      "lengthMi": null,
+      "mtbProjectUrl": null,
+      "nearestFeature": {
+        "name": "Tower Arch",
+        "type": "viewpoint",
+        "distM": 3646
+      },
+      "attrSource": "OSM"
+    },
+    {
+      "id": "cp-babysteps",
+      "name": "Baby Steps Overlook",
+      "lngLat": [
+        -109.72266,
+        38.79481
+      ],
+      "scored": true,
+      "photo": false,
+      "elevationFt": 4742,
+      "tier": "public",
+      "ownerLabel": "BLM",
+      "trailName": "Baby Steps Road",
+      "surface": "ground",
+      "difficulty": "MTB 2",
+      "lengthMi": 0.63,
+      "mtbProjectUrl": "http://www.mtbproject.com/trail/616805/klondike-bluff-outer-loop",
+      "nearestFeature": {
+        "name": "Tower Arch",
+        "type": "viewpoint",
+        "distM": 3143
+      },
+      "attrSource": "BLM"
+    },
+    {
+      "id": "cp-ekg",
+      "name": "EKG Saddle",
+      "lngLat": [
+        -109.7318,
+        38.81022
+      ],
+      "scored": true,
+      "photo": true,
+      "elevationFt": 4863,
+      "tier": "public",
+      "ownerLabel": "BLM",
+      "trailName": "EKG Trail",
+      "surface": "ground",
+      "difficulty": "MTB 3",
+      "lengthMi": 1.66,
+      "mtbProjectUrl": "http://www.mtbproject.com/trail/616805/klondike-bluff-outer-loop",
+      "nearestFeature": {
+        "name": "Tower Arch",
+        "type": "viewpoint",
+        "distM": 4535
+      },
+      "attrSource": "BLM"
+    },
+    {
+      "id": "cp-rim",
+      "name": "Klondike Bluffs Rim",
+      "lngLat": [
+        -109.69736,
+        38.80387
+      ],
+      "scored": true,
+      "photo": true,
+      "elevationFt": 5251,
+      "tier": "public",
+      "ownerLabel": "BLM",
+      "trailName": "Klondike Bluffs Trail",
+      "surface": "ground",
+      "difficulty": null,
+      "lengthMi": null,
+      "mtbProjectUrl": null,
+      "nearestFeature": {
+        "name": "Tower Arch",
+        "type": "viewpoint",
+        "distM": 1884
+      },
+      "attrSource": "OSM"
+    },
+    {
+      "id": "cp-tower-approach",
+      "name": "Tower Arch Approach",
+      "lngLat": [
+        -109.70701,
+        38.78574
+      ],
+      "scored": true,
+      "photo": true,
+      "elevationFt": 4697,
+      "tier": "public",
+      "ownerLabel": "BLM",
+      "trailName": "Klondike Bluffs Road",
+      "surface": "ground",
+      "difficulty": null,
+      "lengthMi": null,
+      "mtbProjectUrl": null,
+      "nearestFeature": {
+        "name": "Tower Arch",
+        "type": "viewpoint",
+        "distM": 1752
+      },
+      "attrSource": "OSM"
+    },
+    {
+      "id": "wp-tower-arch",
+      "name": "Tower Arch",
+      "lngLat": [
+        -109.6872,
+        38.78889
+      ],
+      "scored": false,
+      "forbidden": true,
+      "photo": false,
+      "elevationFt": 5099,
+      "tier": "restricted",
+      "ownerLabel": "NPS",
+      "trailName": "Klondike Bluffs Trail",
+      "surface": null,
+      "difficulty": "hiking",
+      "lengthMi": null,
+      "mtbProjectUrl": null,
+      "nearestFeature": {
+        "name": "Tower Arch",
+        "type": "viewpoint",
+        "distM": 1
+      },
+      "attrSource": "OSM"
+    }
+  ],
+  "geocache": {
+    "searchCenter": [
+      -109.7165,
+      38.79875
+    ],
+    "searchRadiusM": 150,
+    "cachePoint": [
+      -109.71732,
+      38.79948
+    ],
+    "cacheTier": "public"
+  },
+  "route": {
+    "totalMiles": 9.49,
+    "totalGainFt": 988,
+    "segmentMiles": [
+      1.29,
+      1.82,
+      3.81,
+      2.56
+    ],
+    "onTrailFlags": [
+      true,
+      true,
+      true,
+      true
+    ]
+  }
+}

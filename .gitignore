@@ -18,3 +18,6 @@ npm-debug.log*
 
 # Test / coverage
 coverage/
+
+# Authoring-time fetch cache (scripts/fetch-moab-data.mjs)
+.cache/

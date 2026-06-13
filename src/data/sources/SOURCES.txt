@@ -1,0 +1,16 @@
+TrailQuest — committed real-data provenance
+============================================
+Fetched once at authoring time by scripts/fetch-moab-data.mjs (no runtime calls).
+Area: Klondike Bluffs / Bar M, north of Moab, UT. bbox [-109.78, 38.70, -109.58, 38.84] (WSEN).
+Full attribution + licenses: docs/DATA-SOURCES.md
+
+moab_trails.geojson      OpenStreetMap (Overpass) — ODbL 1.0 — © OpenStreetMap contributors
+named_features.geojson   OpenStreetMap (Overpass) — ODbL 1.0 — © OpenStreetMap contributors
+land_ownership.geojson   UGRC Land Ownership (gis.trustlands.utah.gov) — CC BY 4.0 — UGRC
+trailheads.geojson       UGRC UtahTrailheads — CC BY 4.0 — UGRC
+blm_mtb.geojson          BLM National MTB layer (gis.blm.gov) — public domain — BLM
+route.geojson            Derived: on-trail route (OSM geometry) + USGS 3DEP elevation profile
+checkpoints.authored.json  Authored anchors: real coords/elevation/zone/attrs (step-3 input)
+
+Elevation: USGS 3DEP EPQS (epqs.nationalmap.gov) — public domain — USGS
+Basemap/hillshade (runtime tiles, not stored): Esri World Imagery / World Hillshade — Esri ToU
