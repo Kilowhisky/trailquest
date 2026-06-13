@@ -2,9 +2,10 @@
 
 This folder contains the project context and agent handoff material for TrailQuest.
 
-## Start here
+## Context & decisions
 
-Read these files before implementation work:
+The product context and the decisions behind TrailQuest (the app is **built** — see the *Implementation
+docs* section below):
 
 1. `CONTEXT.md` — what is being built and the MVP scope.
 2. `DOMAIN-CONTEXT.md` — why this is relevant to onX and outdoor mapping.
@@ -30,6 +31,20 @@ The authoritative build plan and the feature specs it references:
 
 > Note: `ATTRIBUTION.md` (AI commit-message convention) is distinct from the implementation-time
 > `DATA-SOURCES.md` (per-dataset data attribution).
+
+## Implementation docs (the app is built)
+
+The app shipped on 2026-06-13 — live demo: <https://kilowhisky.github.io/trailquest/>. These document the
+built result:
+
+- `AI_USAGE.md` — how the app was built with AI end-to-end (process, copy-generation prompts, honest misses).
+- `ARCHITECTURE.md` — module layers, a Mermaid core-loop diagram, and the test-enforced invariants.
+- `CICD.md` — the delivery runbook (per-step PR train, CI gate, Copilot, GitHub Pages deploy).
+- `DATA-SOURCES.md` — per-dataset provenance + licenses for the committed real geospatial data.
+- `WORKLOG.md` — the PR-by-PR implementation log.
+
+The root `README.md` is the front door (how to play the demo + how it was built); `CHANGELOG.md` records the
+`0.1.0` implementation release.
 
 ## Important agent rule
 

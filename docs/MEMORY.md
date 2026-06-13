@@ -36,16 +36,16 @@ Core idea:
 
 ## Current implementation state
 
-As of 2026-06-12 (post-consolidation, D-013):
+**As of 2026-06-13: the app is COMPLETE and shipped.** Live demo:
+<https://kilowhisky.github.io/trailquest/>.
 
-- The **planning corpus is complete and consolidated** — decisions D-001 … D-014, an authoritative
-  implementation plan ([plans/IMPLEMENTATION-PLAN.md](plans/IMPLEMENTATION-PLAN.md)), and seven specs
-  (scoring, testing, fog-of-war, three D-012 authenticity specs, + the CI/CD pipeline) are internally
-  consistent.
-- **Build scope is locked to the full corpus:** D-010 scoring + D-011 real Moab data + D-012 (all three
-  authenticity tiers) + fog-of-war discovery.
-- **No application code exists yet.** No app scaffold, map UI, geospatial logic, data-fetch script, or
-  tests. Scaffolding is the next step.
+- The **full app is built** and merged to `main` through the 7-PR train (PRs #1–#7): scaffold + CI/CD,
+  real-data fetch, typed fixtures, pure `lib/geo.ts` + `lib/scoring.ts`, `state/questReducer.ts`, `MapView`,
+  the five overlay cards, and docs. **61 tests** green; verified in production to a perfect 1000 / all 8 badges.
+- The full corpus shipped: D-010 scoring + D-011 real Moab data + D-012 (all three authenticity tiers) +
+  fog-of-war discovery + the D-014 CI/CD process.
+- Implementation-phase docs exist: `docs/AI_USAGE.md`, `docs/ARCHITECTURE.md`, `docs/CICD.md`,
+  `docs/WORKLOG.md`, `docs/DATA-SOURCES.md`, and a rewritten `README.md` + MIT `LICENSE`.
 
 ## Important constraints
 
@@ -63,22 +63,11 @@ As of 2026-06-12 (post-consolidation, D-013):
 
 ## Next best action
 
-Planning and consolidation are done. The next agent should:
-
-1. Turn [plans/IMPLEMENTATION-PLAN.md](plans/IMPLEMENTATION-PLAN.md) into an executable task breakdown
-   (writing-plans skill), then scaffold the app per its build sequence. Execution runs through the
-   [CI/CD pipeline spec](specs/2026-06-12-cicd-pipeline-design.md) (D-014): one PR per build step, CI gate,
-   advisory Copilot review, GitHub Pages live demo. **Outward-facing setup (make repo public, push,
-   autonomous loop) needs explicit user go-ahead — do not perform it unprompted.**
-2. The riskiest early step is the **authoring-time data fetch** (`scripts/fetch-moab-data.mjs`): OSM
-   Overpass + BLM/UGRC ArcGIS + USGS 3DEP have **no CORS headers**, so they are fetched once and committed
-   as static GeoJSON. Every checkpoint/zone/route must be sanity-checked against the Esri satellite imagery
-   (never contradict what a local knows or the imagery shows — D-011).
-3. Remember the **6th unscored "forbidden" waypoint** in the restricted zone (D-013): it demonstrates the
-   blocked-check-in path while the 5 scored checkpoints stay reachable (perfect run = 1000).
-4. Create the implementation-phase docs the plan promises: `docs/AI_USAGE.md`, `docs/WORKLOG.md`,
-   `docs/DATA-SOURCES.md`, `docs/ARCHITECTURE.md`.
-5. Update this file, append to `docs/CHAT-LOG.md`, and update `CHANGELOG.md` after meaningful work.
+The initial build is **done**. Any future work is **enhancement, not initial implementation** — e.g. a
+second quest, code-splitting the inlined GeoJSON out of the main bundle, elevation-profile interactions, or
+broadening the data area. Re-run the authoring fetch with `node scripts/fetch-moab-data.mjs` (cached) if the
+committed data needs refreshing. Continue to ship through the per-step PR train (CI gate + Copilot review +
+Pages deploy; see `docs/CICD.md`), and keep this file, `docs/CHAT-LOG.md`, and `CHANGELOG.md` updated.
 
 ## Running notes
 
@@ -97,3 +86,12 @@ fixed a substantive contradiction where a restricted-zone checkpoint made "perfe
 (D-013: no scored checkpoint in restricted, plus a 6th unscored forbidden waypoint for the block demo);
 and pinned the Access Aware semantics + the canonical 8-badge set (added Pathfinder to the scoring spec).
 Build scope confirmed as the full corpus. No application code written. Next: writing-plans → scaffold.
+
+### 2026-06-13 — Full implementation shipped (steps 1–7) + docs closeout
+
+Claude Code built the entire app through the autonomous 7-PR train (scaffold + CI/CD → real Moab data →
+types → pure geo → MapView → scoring/reducer/cards → polish/docs), each PR CI-gated, Copilot-reviewed, and
+squash-merged with an auto-deploy to GitHub Pages. Adversarial multi-agent verification workflows reviewed
+the data fetch, geo, and scoring/reducer and caught real bugs before merge; the full loop was browser-verified
+to a perfect 1000. The app is **live** at <https://kilowhisky.github.io/trailquest/>; 61 tests pass in CI.
+Implementation details: `docs/WORKLOG.md`, `docs/AI_USAGE.md`, `docs/ARCHITECTURE.md`, `docs/CICD.md`.
