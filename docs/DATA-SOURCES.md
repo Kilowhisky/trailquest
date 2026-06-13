@@ -4,7 +4,7 @@ TrailQuest grounds its map in **real Moab, Utah geospatial data** (decision
 [D-011](DECISIONS.md) / [D-012](DECISIONS.md)). Geometry, land ownership, elevation, and
 named features are real and sourced; **only the game layer** (quest storyline, point values,
 badges, photo prompts, the geocache objective, and the access *tier reclassification*) is
-invented. The in-app disclaimer reads:
+invented. The in-app disclaimer reads (followed on screen by a "drag the marker / click to move" hint):
 
 > *Geometry, ownership & elevation are real (OSM / UGRC / BLM / USGS); the quest, scoring & access tiers are
 > a fictional game — not legal, navigational, or land-access guidance.*

@@ -34,11 +34,10 @@ Open the [live demo](https://kilowhisky.github.io/trailquest/) — no install, n
 1. **Explore to discover (fog-of-war).** The five checkpoints start as faint `?` pins. Move toward one; when
    you cross its (wider) **discovery radius** it resolves into a numbered checkpoint and unlocks its panel
    row. *Why it matters: discovery is driven purely by where you've been — proximity over time — the most
-   genuinely geospatial mechanic in the app.*
+   genuinely geospatial mechanic in the app.* Discovering all five earns **Pathfinder** (no points).
 2. **Check in (+100).** Move inside a checkpoint's **geofence** (the small ring) and the panel's **Check in**
    button enables. *A geofence is a radius around a point; check-in is gated on a point-in-circle test
-   (`distance ≤ radius`).* Earns **Trailhead** (first check-in), **Pathfinder** (all five discovered), and
-   **Quest Complete** (all five checked in).
+   (`distance ≤ radius`).* Earns **Trailhead** (first check-in) and **Quest Complete** (all five checked in).
 3. **Grab the photo bonus (+50).** Three scenic checkpoints show an "I got the shot" button (a mock
    self-attest) with a prompt referencing a real nearby feature. Earns **Shutterbug**.
 4. **Stay access-aware.** As you move, the banner color tracks the **real land owner** beneath you — green
@@ -57,13 +56,15 @@ A flawless run scores **1000 / 1000** and lights all **8 badges**.
 
 ### Scoring & badges
 
-| Source | Points | Badges earned |
+| Source | Points | Badge(s) earned |
 | --- | --- | --- |
-| Checkpoint check-ins | +100 × 5 = **500** | Trailhead · Pathfinder · Quest Complete |
+| Discover all 5 (fog-of-war) | — | Pathfinder |
+| Checkpoint check-ins | +100 × 5 = **500** | Trailhead · Quest Complete |
 | Photo bonuses | +50 × 3 = **150** | Shutterbug |
 | Hidden geocache | **+250** | Cache Hunter |
-| Clean Run (no caution check-in) | **+100** | Clean Run · Access Aware |
-| Posterboard (no points) | — | Left Your Mark |
+| Access warning heeded (caution check-in **or** blocked restricted) | — | Access Aware |
+| Clean Run (no caution check-in) | **+100** | Clean Run |
+| Posterboard | — | Left Your Mark |
 | **Perfect run** | **1000** | **all 8** |
 
 ## Real vs. mocked
