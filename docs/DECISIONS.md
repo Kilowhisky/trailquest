@@ -475,7 +475,9 @@ flagged this gap; this decision closes it.
   autonomous build loop. `gh` is already authenticated as `Kilowhisky` (ADMIN).
 - The scaffold PR (build step 1) introduces `.github/workflows/ci.yml` + `deploy.yml`, ESLint config,
   `.gitignore`, and Vite `base: '/trailquest/'` (load-bearing for Pages); a `docs/CICD.md` runbook is added then.
-- **Open:** whether to add a `LICENSE` (MIT, ~1 min) — see the CI/CD spec's open questions.
+- **Resolved (2026-06-13):** added an **MIT** `LICENSE` for TrailQuest's source (committed real data keeps
+  its upstream licenses per `docs/DATA-SOURCES.md`). The implementation shipped via the 7-PR train; the
+  operational runbook is `docs/CICD.md`.
 
 ---
 

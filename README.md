@@ -1,156 +1,114 @@
 # TrailQuest
 
-**AI-generated, access-aware outdoor scavenger hunts for exploration, off-roading, and trail discovery.**
+**An AI-generated, access-aware outdoor scavenger hunt over real Moab, Utah trail data.**
 
-TrailQuest is an early geospatial product prototype created for an onX Maps AI take-home project. The project starts from a simple idea: maps already help outdoor users answer **where am I?** and **where can I go?** TrailQuest explores a third question:
+> 🗺️ **Live demo: <https://kilowhisky.github.io/trailquest/>**
 
-> What should I go do outside today?
+TrailQuest is a geospatial product prototype built for an onX Maps AI take-home. Maps already help
+outdoor users answer *where am I?* and *where can I go?* — TrailQuest explores a third question:
+**what should I go do outside today?** It turns map primitives (waypoints, geofences, routes, land-access
+layers, trail metadata, elevation) into a scored outdoor quest.
 
-The concept turns map primitives — waypoints, coordinates, geofences, routes, access layers, and trail metadata — into scored outdoor quests. A user can complete checkpoints, earn points, optionally satisfy photo prompts, and finish a safe/legal challenge route.
+The demo runs over the **real Klondike Bluffs / Bar M trail system north of Moab**, where BLM
+mountain-bike singletrack runs right up against the **Arches National Park** boundary — an authentic
+public-land → restricted-park edge that drives the access mechanic. Open the
+[live demo](https://kilowhisky.github.io/trailquest/) to play it.
 
-This repository is intentionally initialized as a **handoff package for Claude Code / Claude Max**. The first commit establishes project context, product direction, decisions, and domain notes before implementation begins.
+## The quest loop
 
-## Take-home prompt
+1. **Explore.** Five checkpoints start hidden as faint `?` pins (fog-of-war). Drag the blue marker or
+   click the map to move; crossing a checkpoint's **discovery radius** reveals it.
+2. **Check in.** Inside a checkpoint's geofence, check in for **+100**. Three scenic checkpoints offer a
+   self-attested **photo bonus (+50)**.
+3. **Stay access-aware.** The access banner reflects the **real land owner** under your feet (BLM / SITLA /
+   NPS). The 6th waypoint — the real **Tower Arch** — sits just inside Arches NP; its check-in is **blocked**
+   (earning the *Access Aware* badge) because the park is off-limits to this game.
+4. **Find the cache.** A fuzzy ~150 m search circle hides a geocache (**+250**) off-route.
+5. **Finish clean.** Complete all five checkpoints with no caution-zone check-ins for the **Clean Run +100**,
+   then sign the completion **posterboard**. A perfect run = **1000** with all **8 badges**.
 
-The original assignment:
+## Real vs. mocked
 
-> Build out, assisted by AI, any application that would be considered "geospatial" — no other prescription. Anything dealing with geospatial data: displaying, manipulating, or understanding it. Bonus points if it loosely resembles something you wish onX would do.
->
-> We're evaluating your work and thinking process with AI, not a polished or fully working result. Plan for 1–2 hours max.
->
-> The only deliverable is a GitHub repository, including any artifacts you feel help document what you've done.
+The geography is **real and sourced**; only the *game layer* is invented.
 
-## Product thesis
+| Real (sourced, committed static) | Mocked (the game) |
+| --- | --- |
+| Trail geometry + names (OSM) | Quest storyline & briefing copy |
+| Land-ownership polygons → access tiers (UGRC / BLM / NPS) | Point values, badges, photo prompts |
+| Per-checkpoint elevation + on-trail route profile (USGS 3DEP) | The geocache objective + posterboard |
+| Difficulty / surface / mileage attributes (OSM / BLM) | The public/caution/restricted **tier mapping** |
+| Satellite + hillshade imagery (Esri) | |
 
-TrailQuest is a gamified exploration layer that could plausibly sit on top of an outdoor mapping product like onX.
+> **Disclaimer (shown in-app):** geometry, ownership & elevation are real (OSM / UGRC / BLM / USGS);
+> the quest, scoring & access tiers are a fictional game — *not legal, navigational, or land-access guidance.*
 
-The prototype should demonstrate:
+Full provenance + licenses: [`docs/DATA-SOURCES.md`](docs/DATA-SOURCES.md).
 
-- geospatial reasoning, not just UI polish
-- coordinates, waypoints, and geofenced check-ins
-- access-aware validation using **real** land-ownership polygons (BLM/UGRC/NPS) reclassified into illustrative public/caution/restricted tiers
-- scoring and badges tied to outdoor accomplishments
-- AI-generated quest briefings or challenge copy
-- a clear AI-assisted engineering process
+## Tech stack
 
-## Why this is geospatial
+- **Vite 6 + React 18 + TypeScript** (frontend-only; no backend, no auth, no runtime API calls)
+- **Leaflet** via `react-leaflet@4`; keyless **Esri World Imagery** + **World Hillshade** tiles
+- **Turf.js** for distance, point-in-polygon, and authoring-time route-network shortest-path
+- **Tailwind CSS v4** + **sonner** toasts; dark, rugged, orange-accent theme
+- **Vitest + Testing Library** — 61 tests (pure geo + scoring + reducer integration + smoke)
 
-TrailQuest should use geospatial data directly:
+## Quickstart
 
-- map rendering
-- waypoint markers
-- latitude/longitude coordinates
-- distance calculations
-- geofence radius checks
-- point-in-polygon access validation
-- route/checkpoint sequencing
-- simulated current location
-- real land-ownership layers reclassified into public/caution/restricted access tiers
-
-## Why this is onX-relevant
-
-onX products already center around outdoor confidence, navigation, access, trails, offline use, and user-created map data. The public onX Offroad feature set includes offline maps, route building, trail reports, location sharing, custom waypoints, private land boundaries, off-road trail maps, trail difficulty ratings, recreation points, and turn-by-turn/off-grid navigation.
-
-TrailQuest is not intended to copy onX. It is a feature hypothesis:
-
-> If users already plan, navigate, mark, share, and track outdoor experiences, a quest layer could give them structured reasons to explore.
-
-## Current repository state
-
-This repo currently contains planning artifacts only (no application code yet):
-
-```text
-README.md
-CHANGELOG.md
-docs/
-  README.md              # docs index
-  CONTEXT.md
-  DOMAIN-CONTEXT.md
-  GENESIS.md
-  DECISIONS.md           # D-001 … D-013
-  MEMORY.md
-  CHAT-LOG.md
-  ATTRIBUTION.md         # AI commit-message convention
-  plans/
-    IMPLEMENTATION-PLAN.md
-  specs/
-    scoring-design.md
-    testing-plan.md
-    2026-06-12-fog-of-war-discovery-design.md
-    2026-06-12-real-attribute-surfacing-design.md
-    2026-06-12-elevation-and-on-trail-distance-design.md
-    2026-06-12-terrain-and-named-feature-polish-design.md
-  research/
-    moab-data-sources.md
+```bash
+npm install
+npm run dev        # http://localhost:5173
+npm test           # 61 tests
+npm run build      # production build (deployed to GitHub Pages)
 ```
 
-Implementation (scaffolding the app) is the next step.
+The real Moab data was fetched once at authoring time and committed under `src/data/sources/`. To
+re-fetch: `node scripts/fetch-moab-data.mjs` (resilient, cached, no keys required).
 
-## Agent handoff protocol
+## How this was built (the AI-assisted process)
 
-AI agents working in this repo should keep durable working state in `docs/`:
+The take-home is judged on *a clear AI-assisted engineering process*, so the process is part of the
+deliverable:
 
-- `docs/MEMORY.md` — persistent agent memory, current state, constraints, and next best action.
-- `docs/CHAT-LOG.md` — chronological summaries of meaningful AI-agent sessions.
-- `docs/DECISIONS.md` — product and architecture decisions.
-- `CHANGELOG.md` — repository-level changes.
+- **Brainstorm → spec → plan** for every feature before code (see `docs/specs/`, `docs/DECISIONS.md`).
+- **A serial PR train** — one PR per build step (7), each in its own git worktree, gated by **GitHub
+  Actions CI** (typecheck · lint · test · build), reviewed by **GitHub Copilot**, and squash-merged.
+- **Adversarial multi-agent verification** of the high-risk pure logic — the real-data fetch, `lib/geo.ts`,
+  and the scoring/reducer — caught real bugs before merge (e.g. a BLM MultiLineString mis-attribution and an
+  elevation-gain corruption on a dropped sample).
+- **TDD** on the pure geospatial + scoring layers; **browser QA** (Chrome DevTools) on every UI step.
+- Every merge **auto-deploys** the live demo to GitHub Pages.
 
-Before making significant implementation changes, an agent should read `README.md` and all files in `docs/`. After meaningful work, the agent should update `docs/MEMORY.md`, append a session note to `docs/CHAT-LOG.md`, and update `CHANGELOG.md` / `docs/DECISIONS.md` when appropriate.
+The full story, including the AI copy-generation prompts: [`docs/AI_USAGE.md`](docs/AI_USAGE.md). The
+delivery pipeline: [`docs/CICD.md`](docs/CICD.md). The code architecture: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
-## Recommended implementation direction
-
-Use a simple frontend-only prototype:
-
-```text
-Vite + React + TypeScript
-Leaflet (react-leaflet) for maps; keyless Esri World Imagery basemap
-Turf.js for geospatial calculations
-Real Moab geometry (OSM/BLM/UGRC), fetched at authoring time and committed static
-Mock only the game layer (quest, scoring, badges, access tiers)
-No backend
-No auth
-No real GPS dependency
-No legal/authoritative land-access claims
-```
-
-## MVP scope
-
-A reviewer should be able to:
-
-1. Open the app locally.
-2. See a map with a quest and 4–6 checkpoints.
-3. Read an AI-styled quest briefing.
-4. Move a simulated user location.
-5. See distance-to-checkpoint and inside/outside geofence state.
-6. Check in when inside a geofence.
-7. Earn points and badges.
-8. See real-ownership-derived access tiers and checkpoint access status.
-9. Understand the product and engineering tradeoffs from the docs.
-
-## Non-goals
-
-Do not build these in the first pass:
-
-- production backend
-- user accounts
-- real onX integration
-- authoritative or real-time land-access status (geometry is real; the access **tiers** are an illustrative game)
-- legal access assertions
-- multiplayer/social network
-- production photo verification
-- mobile app shell
-- paid map provider dependency
-
-## Suggested next command for Claude Code
+## Project layout
 
 ```text
-Read README.md and all files in docs/. Pay special attention to docs/MEMORY.md and docs/CHAT-LOG.md. Then propose a minimal 1–2 hour implementation plan for TrailQuest. After the plan, scaffold the app and implement the smallest demoable version of the geospatial quest loop. When finished, update docs/MEMORY.md, append a session summary to docs/CHAT-LOG.md, and update CHANGELOG.md.
+src/
+  lib/geo.ts            # pure spatial primitives (distance, geofence, classifyAccess, UTM, gain…)
+  lib/scoring.ts        # pure scoring (checkin/photo/geocache/cleanrun, derived badges + totals)
+  state/questReducer.ts # geo + scoring integration seam (the reducer)
+  data/                 # typed quest fixtures + committed real GeoJSON sources
+  components/           # MapView + floating overlay cards
+  types/quest.ts        # the domain model
+scripts/fetch-moab-data.mjs   # authoring-time real-data fetch + route snapping + elevation
+docs/                   # specs, decisions, data sources, AI usage, architecture, CI/CD
+.github/workflows/      # ci.yml (gate) · deploy.yml (Pages)
 ```
 
-## Source notes
+## onX relevance
 
-The domain context references public onX pages, including:
+onX Offroad centers on outdoor confidence, navigation, access, trails, and user-created map data.
+TrailQuest is a feature hypothesis, not a clone: *if users already plan, navigate, mark, and track
+outdoor experiences, a quest layer could give them structured reasons to explore* — with land-access
+awareness as a first-class, onX-native mechanic.
 
-- https://www.onxmaps.com/about
-- https://www.onxmaps.com/offroad/app/features
-- https://www.onxmaps.com/offroad/app/features/offline-maps
+## Non-goals (out of scope by design)
+
+Production backend · user accounts · real onX integration · authoritative/real-time land-access status
+(geometry is real; the access **tiers** are an illustrative game) · multiplayer · production photo
+verification · paid map providers.
+
+## License
+
+[MIT](LICENSE).
