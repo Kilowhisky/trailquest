@@ -79,12 +79,26 @@ export function MapView({ userPosition, discoveredIds, onMoveUser, showHillshade
           return (
             <Fragment key={c.id}>
               <Circle center={toLatLng(c.position)} radius={c.radius} pathOptions={FORBIDDEN_FENCE} />
-              <Marker position={toLatLng(c.position)} icon={forbiddenIcon()} title={`${c.name} — restricted (NPS)`} />
+              {/* non-interactive so clicking a marker still moves the user (click-to-walk) */}
+              <Marker
+                position={toLatLng(c.position)}
+                icon={forbiddenIcon()}
+                title={`${c.name} — restricted (NPS)`}
+                interactive={false}
+              />
             </Fragment>
           )
         }
         if (!discoveredIds.has(c.id)) {
-          return <Marker key={c.id} position={toLatLng(c.position)} icon={undiscoveredIcon()} title="Undiscovered" />
+          return (
+            <Marker
+              key={c.id}
+              position={toLatLng(c.position)}
+              icon={undiscoveredIcon()}
+              title="Undiscovered"
+              interactive={false}
+            />
+          )
         }
         return (
           <Fragment key={c.id}>
@@ -93,6 +107,7 @@ export function MapView({ userPosition, discoveredIds, onMoveUser, showHillshade
               position={toLatLng(c.position)}
               icon={checkpointIcon(scoredOrder.get(c.id) ?? 0, c.photoPrompt != null)}
               title={c.name}
+              interactive={false}
             />
           </Fragment>
         )
