@@ -31,9 +31,14 @@ can merge once CI is green.
 
 ## Live demo — `.github/workflows/deploy.yml`
 
-Runs on push to `main` (i.e. after each merge): `npm ci → typecheck/lint/test → vite build → upload
-`dist/` → `actions/deploy-pages`. Pages source = "GitHub Actions". Vite `base: '/trailquest/'` (build
-only) so assets resolve at the project subpath.
+Runs on push to `main` (i.e. after each merge):
+
+```text
+npm ci → typecheck/lint/test → vite build → upload dist/ → actions/deploy-pages
+```
+
+Pages source = "GitHub Actions". Vite `base: '/trailquest/'` (build only) so assets resolve at the
+project subpath.
 
 → **<https://kilowhisky.github.io/trailquest/>**
 
