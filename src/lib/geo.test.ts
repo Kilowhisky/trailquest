@@ -88,7 +88,7 @@ describe('isInsideGeofence', () => {
   it('is inclusive: a point exactly at the radius is inside', () => {
     const exact = distanceMeters(MOAB_A, MOAB_B)
     expect(isInsideGeofence(MOAB_B, MOAB_A, exact)).toBe(true)
-    // and just under the radius is outside
+    // shrinking the radius just below that exact distance puts the point outside
     expect(isInsideGeofence(MOAB_B, MOAB_A, exact - 0.5)).toBe(false)
   })
 })
@@ -170,6 +170,12 @@ describe('computeGain', () => {
   it('returns 0 for a strictly descending profile', () => {
     expect(computeGain([120, 110, 100])).toBe(0)
   })
+  it('skips non-finite samples instead of letting them corrupt the gain (failed EPQS lookups)', () => {
+    // a null/NaN sample must not be treated as 0 (which would add a bogus huge delta)
+    expect(computeGain([4000, null, 4100, 4050])).toBe(100) // +100 between the two finite climbs
+    expect(computeGain([4000, 4100, NaN, 4200, 4300])).toBe(300) // gain measured across the gap
+    expect(computeGain([4000, undefined as unknown as number, 4200])).toBe(200)
+  })
 })
 
 // --- routeTotals ----------------------------------------------------------
@@ -207,5 +213,12 @@ describe('toUTM', () => {
     expect(u.easting).toBeLessThan(627000)
     expect(u.northing).toBeGreaterThan(4269000)
     expect(u.northing).toBeLessThan(4271000)
+  })
+  it('uses the X band (72°–84°, the 12°-tall MGRS exception) instead of an undefined band', () => {
+    expect(toUTM([15, 80.5]).zone).toBe('33X')
+    expect(toUTM([15, 78]).zone).toBe('33X')
+  })
+  it('clamps the zone at the +180° boundary to 60 (not the out-of-range 61)', () => {
+    expect(toUTM([180, 0]).zone).toBe('60N')
   })
 })

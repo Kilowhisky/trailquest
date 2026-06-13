@@ -5,6 +5,10 @@ import type { AccessZone, Checkpoint, LngLat, QuestRoute, ZoneClass } from '../t
  * Pure, side-effect-free spatial primitives. All the geospatial reasoning lives here
  * so it is obvious and unit-testable (the take-home explicitly wants the spatial logic
  * visible, not hidden behind prose). No I/O, no Leaflet, no runtime data fetching.
+ *
+ * Precondition: positions are finite `[lng, lat]` (degrees). All inputs in this app
+ * come from real map coordinates or the draggable user marker, so this always holds;
+ * non-finite coordinates are out of contract (Turf throws on NaN).
  */
 
 /** Great-circle distance between two [lng, lat] points, in meters. */
@@ -59,12 +63,23 @@ export function checkpointProximity(
   }
 }
 
-/** Cumulative ascent: sum of positive consecutive deltas in an elevation profile. */
-export function computeGain(profile: number[]): number {
+/**
+ * Cumulative ascent: sum of positive deltas between consecutive FINITE samples.
+ * Non-finite samples (a `null`/`NaN` from a failed USGS 3DEP lookup) are skipped, so
+ * one dropped reading can't be coerced to 0 and inflate the climb. This keeps the
+ * runtime figure in agreement with the authoring script, which null-filters before
+ * committing `totalGainFt`.
+ */
+export function computeGain(profile: ReadonlyArray<number | null | undefined>): number {
   let gain = 0
-  for (let i = 1; i < profile.length; i++) {
-    const delta = profile[i] - profile[i - 1]
-    if (delta > 0) gain += delta
+  let prev: number | null = null
+  for (const v of profile) {
+    if (typeof v !== 'number' || !Number.isFinite(v)) continue
+    if (prev !== null) {
+      const delta = v - prev
+      if (delta > 0) gain += delta
+    }
+    prev = v
   }
   return Math.round(gain)
 }
@@ -89,18 +104,20 @@ const BANDS = 'CDEFGHJKLMNPQRSTUVWX' // MGRS latitude bands (8° each from 80°S
 
 function utmBand(lat: number): string {
   if (lat < -80 || lat >= 84) return lat < 0 ? 'A' : 'Z' // polar (UPS) — out of UTM range
+  if (lat >= 72) return 'X' // X band spans 72°–84° (12° tall — the MGRS exception to the 8° rule)
   return BANDS[Math.floor((lat + 80) / 8)]
 }
 
 /**
- * WGS84 lat/lng -> UTM (Snyder/USGS transverse-Mercator series). Returns the MGRS
- * zone+band (e.g. "12S") and easting/northing in meters. Accurate to ~1 m, ample for
- * a coordinate readout.
+ * WGS84 `[lng, lat]` (degrees) -> UTM (Snyder/USGS transverse-Mercator series). Returns
+ * the MGRS zone+band (e.g. "12S") and easting/northing in meters. Accurate to ~1 m,
+ * ample for a coordinate readout.
  */
 export function toUTM([lng, lat]: LngLat): { zone: string; easting: number; northing: number } {
   const e2 = UTM_F * (2 - UTM_F)
   const ep2 = e2 / (1 - e2)
-  const zoneNum = Math.floor((lng + 180) / 6) + 1
+  // zones are 1–60; the +180° boundary would otherwise compute 61, so clamp it.
+  const zoneNum = Math.min(60, Math.floor((lng + 180) / 6) + 1)
   const lon0 = (((zoneNum - 1) * 6 - 180 + 3) * Math.PI) / 180
   const phi = (lat * Math.PI) / 180
   const lam = (lng * Math.PI) / 180
