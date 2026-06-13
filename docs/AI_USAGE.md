@@ -92,6 +92,28 @@ points, and badges are invented.
   elevation-gain corruption and the UTM edge cases; the scoring workflow caught the completion/delta
   coupling. None of these were in the original "looks done" state.
 
+## Token footprint
+
+Tallied directly from the Claude Code session transcripts for this project (11 main sessions + 3
+persisted subagent transcripts, **1,898 assistant turns, all Opus 4.8**):
+
+| Measure | Tokens | What it represents |
+| --- | ---: | --- |
+| **Output** | **~2.7M** | What Claude actually *generated* — code, tests, docs, messages |
+| Fresh input | ~1.4M | New prompt text read for the first time |
+| Cache writes | ~19.0M | Context written into the prompt cache |
+| **Fresh total** | **~23.1M** | Output + fresh input + cache writes — the real "new work" footprint |
+| Cache reads | ~462.4M | Prior context re-read from cache across all turns |
+| **Grand total** | **~485.5M** | Sum of all token types |
+
+How to read this: the ~485M grand total is real but **~95% is cache reads** — the conversation history
+and the committed data/code files re-fed to the model on each of the 1,898 turns. Cache reads bill at a
+fraction of fresh input, so they inflate the raw count far more than the cost. The honest measures of
+work done are **~2.7M tokens generated** and **~23.1M fresh tokens**. About 82% of the spend was the
+single autonomous build session (steps 2–7, the data pipeline, the verification workflows, and browser
+QA). Treat ~485M as a floor: it counts only the subagent transcripts persisted under the project's
+session directory.
+
 ## Tools used
 
 Claude Code (Opus 4.8), GitHub Actions, GitHub Copilot code review, Chrome DevTools MCP for browser QA,
