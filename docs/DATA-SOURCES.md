@@ -30,8 +30,13 @@ restricted-NPS edge for the access mechanic. bbox `[-109.78, 38.70, -109.58, 38.
 | Named features (arches / peaks / viewpoints) | `named_features.geojson` | **OpenStreetMap** via Overpass | ODbL 1.0 — © OpenStreetMap contributors |
 | Per-checkpoint elevation + route elevation profile | `route.geojson`, `checkpoints.authored.json` | **USGS 3DEP** EPQS (`epqs.nationalmap.gov`) | Public domain — USGS 3DEP |
 | On-trail quest route (snapped to OSM trail network) | `route.geojson` | Derived from OSM trail geometry via Turf network routing | ODbL 1.0 (geometry) |
-| Satellite basemap | _(runtime tiles)_ | **Esri World Imagery** | Esri ToU — © Esri, Maxar, Earthstar Geographics |
-| Hillshade overlay (optional) | _(runtime tiles)_ | **Esri World Hillshade** | Esri ToU — © Esri |
+| Satellite basemap | *(runtime tiles)* | **Esri World Imagery** | Esri ToU — © Esri, Maxar, Earthstar Geographics |
+| Hillshade overlay (optional) | *(runtime tiles)* | **Esri World Hillshade** | Esri ToU — © Esri |
+
+> Note: per-checkpoint **difficulty/surface** come from OSM (`mtb:scale`/`surface`); the BLM MTB
+> layer supplies **route name + mileage + MTB Project link** (no difficulty field). UGRC
+> UtahTrailheads records an upstream per-feature `DataSource` (e.g. *OrbitalView*) — the UGRC
+> CC BY 4.0 credit covers redistribution; the field is not a separate uncredited source.
 
 ## Access-tier reclassification (the game layer over real ownership)
 
@@ -42,8 +47,12 @@ boundaries:
 | Real owner (UGRC `owner`/`admin`) | Game tier |
 | --- | --- |
 | BLM (Bureau of Land Management) | **public** |
-| State / SITLA / FFSL / WSA / USFS | **caution** |
+| State / SITLA / FFSL / Utah State Parks (USP) / WSA / USFS | **caution** |
 | NPS (Arches National Park) / Private | **restricted** |
+
+> The mapping covers WSA/USFS for generality; the owners actually present in this bbox are
+> **BLM, NPS, Private, SITLA, FFSL, and Utah State Parks (USP)** (verified against
+> `land_ownership.geojson`).
 
 In this quest all **5 scored checkpoints** sit on **BLM public** land (so a clean perfect run is
 reachable); the **6th, unscored "Tower Arch" waypoint** sits just inside the **NPS (restricted)**

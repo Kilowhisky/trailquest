@@ -93,7 +93,8 @@ const GEOCACHE = { searchCenter: [-109.7165, 38.79875], searchRadiusM: 150, cach
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 
 const DEFAULT_HEADERS = {
-  'User-Agent': 'TrailQuest-authoring/1.0 (onX take-home demo; chris@wetzelrice.com)',
+  // Non-personal UA (no PII): identify the tool + repo for polite API etiquette.
+  'User-Agent': 'TrailQuest-authoring/1.0 (+https://github.com/Kilowhisky/trailquest)',
   Accept: '*/*',
 }
 
@@ -611,9 +612,17 @@ out geom;`
     const pt = turf.point([lng, lat])
     let best = null
     for (const f of blmMtb) {
-      if (f.geometry?.type !== 'LineString') continue
-      const d = turf.pointToLineDistance(pt, f, { units: 'meters' })
-      if (!best || d < best.d) best = { d: Math.round(d), p: f.properties }
+      const g = f.geometry
+      if (!g) continue
+      // BLM MTB layer mixes LineString and MultiLineString — handle both, else the
+      // named loops (Baby Steps Loop, EKG) are silently skipped and attributes
+      // get matched to the wrong nearby trail.
+      const lines = g.type === 'LineString' ? [g.coordinates] : g.type === 'MultiLineString' ? g.coordinates : []
+      for (const line of lines) {
+        if (!Array.isArray(line) || line.length < 2) continue
+        const d = turf.pointToLineDistance(pt, turf.lineString(line), { units: 'meters' })
+        if (!best || d < best.d) best = { d: Math.round(d), p: f.properties }
+      }
     }
     return best
   }
@@ -626,6 +635,10 @@ out geom;`
     const blm = nearestBlm(lng, lat)
     const nf = nearestNamed(lng, lat)
     const ele = await elevationFt(lng, lat)
+    // Honest per-attribute provenance: difficulty/surface come from OSM (the BLM MTB
+    // layer carries no difficulty field); length/route-name/URL come from BLM when a
+    // route is within ~250 m, else null.
+    const blmNear = blm && blm.d < 250 ? blm.p : null
     const out = {
       ...cp,
       elevationFt: ele,
@@ -633,11 +646,13 @@ out geom;`
       ownerLabel: z.ownerLabel,
       trailName: nt?.name ?? null,
       surface: nt?.surface ?? null,
-      difficulty: (blm && blm.d < 250 ? blm.p.ROUTE_DIFFICULTY ?? blm.p.DIFFICULTY : null) ?? nt?.difficulty ?? null,
-      lengthMi: blm && blm.d < 250 ? round2(blm.p.GIS_MILES) : null,
-      mtbProjectUrl: blm && blm.d < 250 ? blm.p.WEB_LINK ?? null : null,
+      difficulty: nt?.difficulty ?? null,
+      difficultySource: nt?.difficulty ? nt?.source ?? 'OSM' : null,
+      lengthMi: blmNear ? round2(blmNear.GIS_MILES) : null,
+      blmRouteName: blmNear ? blmNear.ROUTE_PRMRY_NM ?? null : null,
+      mtbProjectUrl: blmNear ? blmNear.WEB_LINK ?? null : null,
+      lengthSource: blmNear ? 'BLM' : null,
       nearestFeature: nf ? { name: nf.name, type: nf.type, distM: nf.d } : null,
-      attrSource: blm && blm.d < 250 ? 'BLM' : nt?.source ?? null,
     }
     enriched.push(out)
     console.log(

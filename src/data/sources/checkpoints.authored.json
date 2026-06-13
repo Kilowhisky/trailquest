@@ -22,14 +22,16 @@
       "trailName": "Jurassic Trail",
       "surface": "ground",
       "difficulty": "MTB 2",
-      "lengthMi": null,
-      "mtbProjectUrl": null,
+      "difficultySource": "OSM",
+      "lengthMi": 3.01,
+      "blmRouteName": "Klondike Bluffs - Jurassic",
+      "mtbProjectUrl": "http://www.mtbproject.com/trail/616805/klondike-bluff-outer-loop",
+      "lengthSource": "BLM",
       "nearestFeature": {
         "name": "Tower Arch",
         "type": "viewpoint",
         "distM": 3646
-      },
-      "attrSource": "OSM"
+      }
     },
     {
       "id": "cp-babysteps",
@@ -46,14 +48,16 @@
       "trailName": "Baby Steps Road",
       "surface": "ground",
       "difficulty": "MTB 2",
-      "lengthMi": 0.63,
+      "difficultySource": "OSM",
+      "lengthMi": 8.54,
+      "blmRouteName": "Klondike Bluffs - Baby Steps Loop",
       "mtbProjectUrl": "http://www.mtbproject.com/trail/616805/klondike-bluff-outer-loop",
+      "lengthSource": "BLM",
       "nearestFeature": {
         "name": "Tower Arch",
         "type": "viewpoint",
         "distM": 3143
-      },
-      "attrSource": "BLM"
+      }
     },
     {
       "id": "cp-ekg",
@@ -70,14 +74,16 @@
       "trailName": "EKG Trail",
       "surface": "ground",
       "difficulty": "MTB 3",
-      "lengthMi": 1.66,
+      "difficultySource": "OSM",
+      "lengthMi": 5.26,
+      "blmRouteName": "Klondike Bluffs - EKG",
       "mtbProjectUrl": "http://www.mtbproject.com/trail/616805/klondike-bluff-outer-loop",
+      "lengthSource": "BLM",
       "nearestFeature": {
         "name": "Tower Arch",
         "type": "viewpoint",
         "distM": 4535
-      },
-      "attrSource": "BLM"
+      }
     },
     {
       "id": "cp-rim",
@@ -94,14 +100,16 @@
       "trailName": "Klondike Bluffs Trail",
       "surface": "ground",
       "difficulty": null,
-      "lengthMi": null,
-      "mtbProjectUrl": null,
+      "difficultySource": null,
+      "lengthMi": 4.53,
+      "blmRouteName": "Klondike Bluffs - Klondike Bluffs",
+      "mtbProjectUrl": "http://www.mtbproject.com/trail/616805/klondike-bluff-outer-loop",
+      "lengthSource": "BLM",
       "nearestFeature": {
         "name": "Tower Arch",
         "type": "viewpoint",
         "distM": 1884
-      },
-      "attrSource": "OSM"
+      }
     },
     {
       "id": "cp-tower-approach",
@@ -118,14 +126,16 @@
       "trailName": "Klondike Bluffs Road",
       "surface": "ground",
       "difficulty": null,
-      "lengthMi": null,
-      "mtbProjectUrl": null,
+      "difficultySource": null,
+      "lengthMi": 4.53,
+      "blmRouteName": "Klondike Bluffs - Klondike Bluffs",
+      "mtbProjectUrl": "http://www.mtbproject.com/trail/616805/klondike-bluff-outer-loop",
+      "lengthSource": "BLM",
       "nearestFeature": {
         "name": "Tower Arch",
         "type": "viewpoint",
         "distM": 1752
-      },
-      "attrSource": "OSM"
+      }
     },
     {
       "id": "wp-tower-arch",
@@ -143,14 +153,16 @@
       "trailName": "Klondike Bluffs Trail",
       "surface": null,
       "difficulty": "hiking",
+      "difficultySource": "OSM",
       "lengthMi": null,
+      "blmRouteName": null,
       "mtbProjectUrl": null,
+      "lengthSource": null,
       "nearestFeature": {
         "name": "Tower Arch",
         "type": "viewpoint",
         "distM": 1
-      },
-      "attrSource": "OSM"
+      }
     }
   ],
   "geocache": {
