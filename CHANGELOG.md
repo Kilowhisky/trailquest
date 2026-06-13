@@ -4,6 +4,40 @@ All notable changes to TrailQuest will be documented in this file.
 
 This project uses a lightweight changelog format because the take-home emphasizes process clarity over release ceremony.
 
+## 0.1.0 - 2026-06-13
+
+First working implementation — the full geospatial quest loop, built through a 7-PR train (one PR per
+build step, CI-gated + Copilot-reviewed; see `docs/CICD.md`). **Live demo:**
+<https://kilowhisky.github.io/trailquest/>
+
+### Added
+
+- **App** (Vite 6 + React 18 + TypeScript, frontend-only): a Leaflet map over real Klondike Bluffs / Arches
+  data with floating overlay cards (briefing, score, checkpoints, access banner, posterboard).
+- **Real data** (`scripts/fetch-moab-data.mjs` + `src/data/sources/`): OSM trails + named features, UGRC
+  land ownership → access tiers, BLM MTB attributes, USGS 3DEP elevation, and an on-trail route snapped to
+  the trail network. Committed static; no runtime calls. Provenance in `docs/DATA-SOURCES.md`.
+- **Pure logic** (TDD): `lib/geo.ts` (distance, inclusive geofence, point-in-polygon access classification,
+  fog-of-war proximity, elevation gain, UTM) and `lib/scoring.ts` (perfect run = 1000, idempotent bonuses,
+  derived badges/totals); `state/questReducer.ts` ties them together.
+- **Mechanics:** fog-of-war discovery, geofenced check-ins, a blocked forbidden waypoint (Tower Arch inside
+  Arches NP) that grants *Access Aware*, a hidden geocache, a Clean Run bonus, 8 badges, and a session-only
+  completion posterboard.
+- **Tests:** 61 (pure geo + scoring + reducer integration + data + App smoke).
+- **Docs:** `README` (rewritten for the shipped app), `docs/AI_USAGE.md`, `docs/ARCHITECTURE.md` (with a
+  Mermaid loop diagram), `docs/CICD.md`, `docs/WORKLOG.md`, and an MIT `LICENSE`.
+
+### Process
+
+- CI/CD: GitHub Actions gate (typecheck · lint · test · build) + GitHub Pages auto-deploy; Copilot review on
+  every PR; adversarial multi-agent verification of the data fetch, geo, and scoring/reducer logic (caught a
+  BLM MultiLineString mis-attribution, an elevation-gain corruption, and UTM edge-case bugs before merge).
+
+### Resolved
+
+- **Open question (D-014): LICENSE** → added **MIT** (covers TrailQuest's source; committed data keeps its
+  upstream licenses per `docs/DATA-SOURCES.md`).
+
 ## 0.0.2 - 2026-06-12
 
 Planning-phase expansion and consolidation. Still no application code — these are docs/decisions only.
