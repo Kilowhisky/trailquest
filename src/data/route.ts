@@ -12,6 +12,9 @@ interface RouteProps {
 
 const fc = JSON.parse(routeRaw) as FeatureCollection<LineString, RouteProps>
 const feature = fc.features[0]
+if (!feature) {
+  throw new Error('route.geojson has no features — re-run scripts/fetch-moab-data.mjs to regenerate it')
+}
 
 /** The on-trail quest route (snapped to real OSM trail geometry — D-012). */
 export const questRoute: QuestRoute = {

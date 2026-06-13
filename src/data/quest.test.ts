@@ -19,7 +19,9 @@ describe('quest fixture', () => {
   })
 
   it('puts the forbidden waypoint in a restricted (NPS) zone, shown from the start (no fog)', () => {
-    const tower = quest.checkpoints.find((c) => c.id === 'wp-tower-arch')!
+    const tower = quest.checkpoints.find((c) => c.id === 'wp-tower-arch')
+    expect(tower).toBeDefined()
+    if (!tower) return
     expect(tower.tier).toBe('restricted')
     expect(tower.ownerLabel).toBe('NPS')
     expect(tower.discoveryRadius).toBeUndefined()
